@@ -1,0 +1,240 @@
+:root {
+    --primary:      #e07b10;
+    --primary-dark: #c46a09;
+    --primary-light:#fff3e0;
+    --accent:       #2c3e50;
+    --neutral-100:  #f8f9fa;
+    --neutral-200:  #e9ecef;
+    --neutral-500:  #6c757d;
+    --white:        #ffffff;
+    --radius:       8px;
+    --shadow-md:    0 4px 24px rgba(0,0,0,0.12);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--neutral-100);
+    color: var(--accent);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== WRAPPER ===== */
+.login-wrapper {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+/* ===== CARD ===== */
+.login-card {
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: var(--shadow-md);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===== LOGO ===== */
+.login-logo {
+    background-color: var(--primary);
+    color: var(--white);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+/* ===== TÍTULOS ===== */
+h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--neutral-500);
+    margin-bottom: 10px;
+}
+
+/* ===== FORM ===== */
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.input-group label i {
+    color: var(--primary);
+    font-size: 0.8rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--accent);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(224,123,16,0.15);
+}
+
+.input-group input::placeholder {
+    color: var(--neutral-500);
+}
+
+/* ===== PASSWORD CON OJO ===== */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 44px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--neutral-500);
+    font-size: 0.9rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.toggle-password:hover {
+    color: var(--primary);
+}
+
+/* ===== OLVIDASTE CONTRASEÑA ===== */
+.forgot {
+    font-size: 0.8rem;
+    color: var(--primary);
+    text-decoration: none;
+    text-align: right;
+    margin-top: -8px;
+    transition: color 0.2s;
+}
+
+.forgot:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* ===== BOTÓN PRINCIPAL ===== */
+.btn-primary {
+    width: 100%;
+    background-color: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 12px;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-top: 4px;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* ===== REGISTRARSE ===== */
+.register-link {
+    font-size: 0.875rem;
+    color: var(--neutral-500);
+    margin-top: 10px;
+}
+
+.register-link a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
+}
+
+/* ===== VOLVER ===== */
+.btn-back {
+    font-size: 0.8rem;
+    color: var(--neutral-500);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    transition: color 0.2s;
+}
+
+.btn-back:hover {
+    color: var(--accent);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 28px 20px;
+    }
+}
