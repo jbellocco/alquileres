@@ -19,6 +19,13 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: var(--neutral-100);
     color: var(--accent);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
 
 /* ===== HEADER ===== */
