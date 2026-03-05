@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrarse - Reseñas de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="nueva-resena.css">
+</head>
+<body>
+
+    <header>
+        <h1><a href="index.html" style="color:inherit; text-decoration:none;"><i class="fa-solid fa-house"></i> Reseñas de Alquileres</a></h1>
+        <div>
+            <a href="login.html"><button><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button></a>
+        </div>
+    </header>
+
+    <main>
+        <div class="form-card">
+
+            <div class="form-header">
+                <i class="fa-solid fa-user-plus"></i>
+                <h2>Crear cuenta</h2>
+            </div>
+
+            <div id="error-msg" style="display:none; color:#e74c3c; font-size:0.875rem; text-align:center; padding:8px; background:#fdf0ef; border-radius:6px; margin-bottom:12px;"></div>
+
+            <form id="registro-form">
+
+                <!-- DATOS PERSONALES -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-user"></i> Datos personales</legend>
+
+                    <div class="two-col">
+                        <div class="input-group">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" id="nombre" placeholder="Ej: Juan">
+                        </div>
+                        <div class="input-group">
+                            <label for="apellido">Apellido</label>
+                            <input type="text" id="apellido" placeholder="Ej: García">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="email"><i class="fa-solid fa-envelope"></i> Email</label>
+                        <input type="email" id="email" placeholder="tu@email.com">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password"><i class="fa-solid fa-lock"></i> Contraseña</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="Mínimo 8 caracteres">
+                            <button type="button" class="toggle-password" onclick="togglePassword('password', 'eye1')">
+                                <i class="fa-regular fa-eye" id="eye1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password2"><i class="fa-solid fa-lock"></i> Repetir contraseña</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password2" placeholder="Repetí tu contraseña">
+                            <button type="button" class="toggle-password" onclick="togglePassword('password2', 'eye2')">
+                                <i class="fa-regular fa-eye" id="eye2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- DATOS DE ALQUILER -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-key"></i> Tu situación de alquiler</legend>
+
+                    <div class="input-group">
+                        <label>¿Alquilás actualmente?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="alquila" value="si" onchange="toggleAlquilerFields(true)">
+                                <span><i class="fa-solid fa-check"></i> Sí</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="alquila" value="no" onchange="toggleAlquilerFields(false)">
+                                <span><i class="fa-solid fa-xmark"></i> No</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="alquiler-fields">
+                        <div class="input-group">
+                            <label for="lugar">Lugar donde alquilás</label>
+                            <input type="text" id="lugar" placeholder="Ej: Palermo, CABA">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="zona">Zona</label>
+                            <select id="zona">
+                                <option value="" disabled selected>Seleccioná una zona</option>
+                                <option>CABA</option>
+                                <option>Buenos Aires</option>
+                                <option>Córdoba</option>
+                                <option>Santa Fe</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="alquiler-promedio">Alquiler promedio mensual</label>
+                            <div class="input-prefix">
+                                <span>$</span>
+                                <input type="number" id="alquiler-promedio" placeholder="Ej: 250000">
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- FOTO DE PERFIL -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-camera"></i> Foto de perfil</legend>
+
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatar-preview">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-upload-avatar" onclick="document.getElementById('foto').click()">
+                                <i class="fa-solid fa-arrow-up-from-bracket"></i> Subir foto
+                            </button>
+                            <p class="upload-hint">JPG o PNG, máx. 2MB</p>
+                            <input type="file" id="foto" accept="image/*" hidden>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <a href="login.html" class="btn-cancel">
+                        <i class="fa-solid fa-arrow-left"></i> Ya tengo cuenta
+                    </a>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-user-plus"></i> Crear cuenta
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
+        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
+    </footer>
+
+    <script type="module">
+        import { registrar, getUsuarioActual } from './auth.js';
+
+        // Si ya está logueado, redirigir al inicio
+        const usuarioActual = await getUsuarioActual();
+        if (usuarioActual) {
+            location.href = 'index.html';
+        }
+
+        document.getElementById('registro-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.querySelector('.btn-submit');
+            const errorMsg = document.getElementById('error-msg');
+
+            const nombre   = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const email    = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const password2 = document.getElementById('password2').value;
+
+            if (password !== password2) {
+                errorMsg.textContent = 'Las contraseñas no coinciden';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando cuenta...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const { nextStep } = await registrar({ nombre, apellido, email, password });
+                if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+                    // Guarda el email para la confirmación
+                    sessionStorage.setItem('pendingEmail', email);
+                    location.href = 'confirmar.html';
+                }
+            } catch (err) {
+                errorMsg.textContent = err.message || 'Error al crear la cuenta';
+                errorMsg.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Crear cuenta';
+            }
+        });
+    </script>
+
+    <script>
+        // Mostrar/ocultar contraseña
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Mostrar/ocultar campos de alquiler
+        function toggleAlquilerFields(show) {
+            document.getElementById('alquiler-fields').style.display = show ? 'block' : 'none';
+        }
+        toggleAlquilerFields(false); // ocultos por defecto
+
+        // Preview foto de perfil
+        document.getElementById('foto').addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const preview = document.getElementById('avatar-preview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="avatar">`;
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+
+</body>
+</html>

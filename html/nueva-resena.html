@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Reseña - Reseñas de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="nueva-resena.css">
+</head>
+<body>
+
+    <header>
+        <h1><a href="index.html" style="color:inherit; text-decoration:none;"><i class="fa-solid fa-house"></i> Reseñas de Alquileres</a></h1>
+        <div id="header-user" style="position:relative; display:flex; align-items:center; gap:10px;">
+            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+            </button>
+            <span id="header-nombre" class="header-nombre"></span>
+            <div id="user-dropdown" class="user-dropdown">
+                <span id="dropdown-nombre" class="dropdown-nombre"></span>
+                <hr class="dropdown-divider">
+                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="form-card">
+
+            <div class="form-header">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <h2>Subir reseña de alquiler</h2>
+            </div>
+
+            <form id="resena-form">
+
+                <!-- UBICACIÓN -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-location-dot"></i> Ubicación</legend>
+
+                    <div class="input-group">
+                        <label for="zona">Zona</label>
+                        <select id="zona">
+                            <option value="" disabled selected>Seleccioná una zona</option>
+                            <option>CABA</option>
+                            <option>Buenos Aires</option>
+                            <option>Córdoba</option>
+                            <option>Santa Fe</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="barrio">Barrio / Partido</label>
+                        <input type="text" id="barrio" placeholder="Ej: Palermo, Flores, San Isidro...">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="direccion">
+                            Dirección
+                            <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es pública</span>
+                        </label>
+                        <input type="text" id="direccion" placeholder="Ej: Av. Corrientes 1234">
+                    </div>
+                </fieldset>
+
+                <!-- TU EXPERIENCIA -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-star"></i> Tu experiencia</legend>
+
+                    <div class="input-group">
+                        <label for="titulo">Título de reseña</label>
+                        <input type="text" id="titulo" placeholder="Ej: Excelente depto en Palermo">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="resena">Reseña</label>
+                        <textarea id="resena" rows="5" placeholder="Contá tu experiencia: cómo era el inmueble, el propietario, el barrio..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Puntaje</label>
+                        <div class="star-rating">
+                            <input type="radio" name="puntaje" id="s5" value="5">
+                            <label for="s5"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="puntaje" id="s4" value="4">
+                            <label for="s4"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="puntaje" id="s3" value="3">
+                            <label for="s3"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="puntaje" id="s2" value="2">
+                            <label for="s2"><i class="fa-solid fa-star"></i></label>
+                            <input type="radio" name="puntaje" id="s1" value="1">
+                            <label for="s1"><i class="fa-solid fa-star"></i></label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- IMÁGENES -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-image"></i> Imágenes</legend>
+
+                    <div class="upload-area" id="upload-area" onclick="document.getElementById('imagenes').click()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p>Hacé clic para subir imágenes</p>
+                        <span>JPG, PNG — máx. 5 imágenes</span>
+                        <input type="file" id="imagenes" accept="image/*" multiple hidden>
+                    </div>
+
+                    <div class="image-preview" id="image-preview"></div>
+                </fieldset>
+
+                <div id="form-error" style="display:none; color:#e74c3c; font-size:0.875rem; padding:10px 14px; background:#fdf0ef; border-radius:6px; margin-bottom:8px;"></div>
+
+                <div class="form-actions">
+                    <a href="index.html" class="btn-cancel">
+                        <i class="fa-solid fa-xmark"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-paper-plane"></i> Publicar reseña
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- PANTALLA DE ÉXITO (oculta inicialmente) -->
+        <div id="success-screen" style="display:none; background:white; border-radius:14px; box-shadow:0 4px 24px rgba(0,0,0,0.12); padding:56px 40px; max-width:480px; margin:40px auto; text-align:center;">
+            <div style="width:72px; height:72px; background:#e8f8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+                <i class="fa-solid fa-circle-check" style="font-size:2.2rem; color:#27ae60;"></i>
+            </div>
+            <h2 style="font-size:1.4rem; font-weight:700; color:#2c3e50; margin-bottom:8px;">¡Reseña publicada!</h2>
+            <p style="color:#6c757d; font-size:0.95rem; margin-bottom:28px;">Tu reseña ya está disponible para que otros la vean.</p>
+            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                <a href="index.html" style="background:#e07b10; color:white; border:none; padding:11px 24px; border-radius:8px; font-family:Inter,sans-serif; font-size:0.95rem; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-house"></i> Ver inicio
+                </a>
+                <button onclick="nuevaResena()" style="background:#fff3e0; color:#c46a09; border:1.5px solid #e07b10; padding:11px 24px; border-radius:8px; font-family:Inter,sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-plus"></i> Agregar otra
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
+        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
+    </footer>
+
+    <script>
+        // Preview de imágenes
+        document.getElementById('imagenes').addEventListener('change', function () {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            const files = Array.from(this.files).slice(0, 5);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `<img src="${e.target.result}" alt="preview">
+                        <button type="button" onclick="this.parentElement.remove()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>`;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Mostrar pantalla de éxito
+        function mostrarExito() {
+            document.getElementById('resena-form').closest('.form-card').style.display = 'none';
+            document.getElementById('success-screen').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nuevaResena() {
+            document.getElementById('resena-form').reset();
+            document.getElementById('image-preview').innerHTML = '';
+            document.getElementById('resena-form').closest('.form-card').style.display = 'block';
+            document.getElementById('success-screen').style.display = 'none';
+        }
+
+        // Drag & drop
+        const area = document.getElementById('upload-area');
+        area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+        area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+        area.addEventListener('drop', e => {
+            e.preventDefault();
+            area.classList.remove('drag-over');
+            document.getElementById('imagenes').files = e.dataTransfer.files;
+            document.getElementById('imagenes').dispatchEvent(new Event('change'));
+        });
+    </script>
+
+    <script type="module">
+        import { Amplify } from 'https://esm.sh/aws-amplify@6';
+        import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+        import { uploadData } from 'https://esm.sh/aws-amplify@6/storage';
+        import { awsConfig } from './aws-config.js';
+        import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+
+        Amplify.configure(awsConfig);
+        const client = generateClient();
+
+        // Verificar sesión al cargar la página
+        const usuarioActual = await getUsuarioActual();
+        if (!usuarioActual) {
+            location.href = 'login.html';
+        }
+
+        // Cargar datos del header
+        try {
+            const { data: perfiles } = await client.models.UserProfile.list({
+                filter: { userId: { eq: usuarioActual.userId } }
+            });
+            let perfil = perfiles && perfiles[0];
+            if (!perfil) {
+                const attrs = await getAtributosUsuario();
+                const { data: nuevo } = await client.models.UserProfile.create({
+                    userId: usuarioActual.userId,
+                    nombre: attrs.nombre,
+                    apellido: attrs.apellido,
+                });
+                perfil = nuevo;
+            }
+            if (perfil) {
+                document.getElementById('header-nombre').textContent = perfil.nombre;
+                document.getElementById('dropdown-nombre').textContent =
+                    `${perfil.nombre} ${perfil.apellido}`;
+            }
+        } catch (e) { /* muestra ícono genérico */ }
+
+        function toggleDropdown() {
+            document.getElementById('user-dropdown').classList.toggle('open');
+        }
+        window.toggleDropdown = toggleDropdown;
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('header-user').contains(e.target)) {
+                document.getElementById('user-dropdown').classList.remove('open');
+            }
+        });
+
+        async function cerrarSesion() { await logout(); }
+        window.cerrarSesion = cerrarSesion;
+
+        document.getElementById('resena-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.querySelector('.btn-submit');
+            const errorDiv = document.getElementById('form-error');
+
+            const zona    = document.getElementById('zona').value;
+            const barrio  = document.getElementById('barrio').value.trim();
+            const titulo  = document.getElementById('titulo').value.trim();
+            const texto   = document.getElementById('resena').value.trim();
+            const puntaje = document.querySelector('input[name="puntaje"]:checked')?.value;
+
+            if (!zona || !barrio || !titulo || !texto || !puntaje) {
+                errorDiv.textContent = 'Por favor completá todos los campos y seleccioná un puntaje.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            errorDiv.style.display = 'none';
+
+            btn.disabled = true;
+
+            try {
+                // Subir imágenes a S3
+                const fileInput = document.getElementById('imagenes');
+                const files = Array.from(fileInput.files).slice(0, 5);
+                const imagenes = [];
+
+                if (files.length > 0) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo imágenes...';
+                    for (const file of files) {
+                        const ext = file.name.split('.').pop();
+                        const nombre = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+                        const upload = await uploadData({
+                            path: ({ identityId }) => `resenas/${identityId}/${nombre}`,
+                            data: file,
+                        }).result;
+                        imagenes.push(upload.path);
+                    }
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...';
+
+                await client.models.Resena.create({
+                    zona,
+                    barrio,
+                    titulo,
+                    texto,
+                    puntaje: parseInt(puntaje),
+                    autorId: usuarioActual.userId,
+                    autorNombre: usuarioActual.signInDetails?.loginId || '',
+                    imagenes: imagenes.length > 0 ? imagenes : null,
+                });
+                mostrarExito();
+            } catch (err) {
+                errorDiv.textContent = 'Error al publicar: ' + (err.message || 'intentá de nuevo');
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar reseña';
+            }
+        });
+    </script>
+
+</body>
+</html>
