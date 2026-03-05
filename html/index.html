@@ -7,85 +7,225 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-
-</head>
-    <title>Reseñas</title>
+    <title>Reseñas de Alquileres</title>
 </head>
 <body>
 
     <header>
-        <h1><i class="fa-solid fa-house"></i> Reseñas de Alquileres</h1>
-        <div>
-            <button><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesion</button>
-            <button><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+        <h1><a href="index.html" style="color:inherit; text-decoration:none;"><i class="fa-solid fa-house"></i> Reseñas de Alquileres</a></h1>
+        <!-- Botones para usuarios no logueados -->
+        <div id="header-auth">
+            <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+            <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+        </div>
+        <!-- Avatar para usuarios logueados -->
+        <div id="header-user" style="display:none; position:relative; align-items:center; gap:10px;">
+            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+            </button>
+            <span id="header-nombre" class="header-nombre"></span>
+            <div id="user-dropdown" class="user-dropdown">
+                <span id="dropdown-nombre" class="dropdown-nombre"></span>
+                <hr class="dropdown-divider">
+                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
         </div>
     </header>
 
     <main>
         <section>
-        <h2>Buscar Reseña</h2>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Buscar por nombre, ubicación...">
-        </div>
-        <div>
-            <button><i class="fa-solid fa-plus"></i> Agregar Reseña</button>
-            <button><i class="fa-solid fa-compass"></i> Explorar Reseñas</button>
-        </div>
-
-        <div>
-            <button><i class="fa-solid fa-location-dot"></i> CABA</button>
-            <button><i class="fa-solid fa-location-dot"></i> Buenos Aires</button>
-            <button><i class="fa-solid fa-location-dot"></i> Córdoba</button>
-            <button><i class="fa-solid fa-location-dot"></i> Santa Fe</button>
-        </div>
-
+            <h2>Buscar Reseña</h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="buscador" placeholder="Buscar por barrio, zona...">
+            </div>
+            <div>
+                <button onclick="location.href='nueva-resena.html'"><i class="fa-solid fa-plus"></i> Agregar Reseña</button>
+                <button><i class="fa-solid fa-compass"></i> Explorar Reseñas</button>
+            </div>
+            <div>
+                <button class="filtro-zona" data-zona=""><i class="fa-solid fa-location-dot"></i> Todas</button>
+                <button class="filtro-zona" data-zona="CABA"><i class="fa-solid fa-location-dot"></i> CABA</button>
+                <button class="filtro-zona" data-zona="Buenos Aires"><i class="fa-solid fa-location-dot"></i> Buenos Aires</button>
+                <button class="filtro-zona" data-zona="Córdoba"><i class="fa-solid fa-location-dot"></i> Córdoba</button>
+                <button class="filtro-zona" data-zona="Santa Fe"><i class="fa-solid fa-location-dot"></i> Santa Fe</button>
+            </div>
         </section>
 
-        <section>
-            <article>
-                <img src="https://resizer.glanacion.com/resizer/v2/la-estructura-exterior-destaca-por-sus-formas-JRJQPNP7ZBGATB6JSBYQHPDBW4.jpg?auth=72ad399c3f966c0e9b19c858b12a29854f33f1c51eaeebec4fd0e62e718d49a1&width=1280&height=854&quality=70&smart=true" alt="">
-                <h3><i class="fa-solid fa-map-pin"></i> Barrio Palermo</h3>
-                <p><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i> 4/5</p>
-                <p>Reseña de alquiler del barrio Palermo. Muy buena ubicación y ambiente.</p>
-            </article>
-
-            <article>
-                <img src="https://images.adsttc.com/media/images/5d34/e507/284d/d109/5600/0240/large_jpg/_FI.jpg?1563747560" alt="">
-                <h3><i class="fa-solid fa-map-pin"></i> Barrio Flores</h3>
-                <p><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i> 4/5</p>
-                <p>Reseña de alquiler del barrio flores. Muy buena ubicación y ambiente.</p>
-            </article>
-
-            <article>
-                <img src="https://resizer.glanacion.com/resizer/v2/la-casa-austral-gano-un-premio-internacional-como-RF74XA7U2BAW3MANZMC3WXVOYU.JPG?auth=908de4664be6f87d9a4910b8a8b6e7e5451087edec90c7dfbeef3e3e6772ce79&width=1280&height=854&quality=70&smart=true" alt="">
-                <h3><i class="fa-solid fa-map-pin"></i> Barrio Barracas</h3>
-                <p><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i> 4/5</p>
-                <p>Reseña de alquiler del barrio Barracas. Muy buena ubicación y ambiente.</p>
-            </article>
-
-            <article>
-                <img src="https://www.lanacion.com.ar/resizer/v2/la-fachada-es-la-carta-de-presentacion-de-una-KEGL2EX5TZATVPLUN2MMHZG364.JPG?auth=040ef2e587318ca1059df50d992f47852839290565a7020011b01344190ffcbf&width=420&height=280&quality=70&smart=true" alt="">
-                <h3><i class="fa-solid fa-map-pin"></i> Barrio Barracas</h3>
-                <p><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i> 4/5</p>
-                <p>Reseña de alquiler del barrio Barracas. Muy buena ubicación y ambiente.</p>
-            </article>
-
-             <article>
-                <img src="https://hips.hearstapps.com/hmg-prod/images/nualart-studio-fachada-piscina-688b4ca8c779d.jpg" alt="">
-                <h3><i class="fa-solid fa-map-pin"></i> Barrio Barracas</h3>
-                <p><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i> 4/5</p>
-                <p>Reseña de alquiler del barrio Barracas. Muy buena ubicación y ambiente.</p>
-            </article>
+        <section id="resenas-grid">
+            <p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando reseñas...
+            </p>
         </section>
-
     </main>
 
     <footer>
         <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
         <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
     </footer>
+
+    <script type="module">
+        import { Amplify } from 'https://esm.sh/aws-amplify@6';
+        import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { awsConfig } from './aws-config.js';
+        import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+
+        Amplify.configure(awsConfig);
+        const clientIAM = generateClient({ authMode: 'iam' });
+        const clientAuth = generateClient(); // usa Cognito para datos privados
+
+        let todasLasResenas = [];
+        let clientResenas = clientIAM; // se actualiza a clientAuth si hay sesión
+
+        function estrellas(puntaje) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += i <= puntaje
+                    ? '<i class="fa-solid fa-star"></i>'
+                    : '<i class="fa-regular fa-star"></i>';
+            }
+            return html;
+        }
+
+        function renderResenas(lista) {
+            const grid = document.getElementById('resenas-grid');
+            if (lista.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron reseñas</p>';
+                return;
+            }
+            grid.innerHTML = lista.map((r, i) => `
+                <article>
+                    <div id="img-wrap-${i}" style="background:#f8f9fa; height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        <i class="fa-solid fa-image" style="font-size:2rem; color:#ced4da;"></i>
+                    </div>
+                    <h3><i class="fa-solid fa-map-pin"></i> ${r.barrio} — ${r.zona}</h3>
+                    <p>${estrellas(r.puntaje)} ${r.puntaje}/5</p>
+                    <p><strong>${r.titulo}</strong></p>
+                    <p>${r.texto}</p>
+                </article>
+            `).join('');
+
+            // Cargar URLs de imágenes de forma asíncrona
+            lista.forEach(async (r, i) => {
+                if (r.imagenes && r.imagenes[0]) {
+                    try {
+                        const { url } = await getUrl({ path: r.imagenes[0] });
+                        const wrap = document.getElementById(`img-wrap-${i}`);
+                        if (wrap) wrap.innerHTML = `<img src="${url}" alt="foto" style="width:100%;height:100%;object-fit:cover;">`;
+                    } catch (e) {}
+                }
+            });
+        }
+
+        async function cargarResenas() {
+            try {
+                const { data } = await clientResenas.models.Resena.list({ limit: 20 });
+                todasLasResenas = data;
+                renderResenas(data);
+            } catch (err) {
+                console.error('Error cargarResenas:', err);
+                document.getElementById('resenas-grid').innerHTML =
+                    `<p style="text-align:center; color:#e74c3c; grid-column:1/-1; padding:40px 0;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar reseñas<br>
+                        <small style="font-size:0.8rem; color:#aaa;">${err.message || err}</small>
+                    </p>`;
+            }
+        }
+
+        // Filtro por zona
+        document.querySelectorAll('.filtro-zona').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const zona = btn.dataset.zona;
+                const filtradas = zona
+                    ? todasLasResenas.filter(r => r.zona === zona)
+                    : todasLasResenas;
+                renderResenas(filtradas);
+            });
+        });
+
+        // Buscador
+        document.getElementById('buscador').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtradas = todasLasResenas.filter(r =>
+                r.barrio.toLowerCase().includes(q) ||
+                r.zona.toLowerCase().includes(q) ||
+                r.titulo.toLowerCase().includes(q)
+            );
+            renderResenas(filtradas);
+        });
+
+        // ===== HEADER AUTH =====
+        async function inicializarHeader() {
+            const user = await getUsuarioActual();
+            if (user) {
+                // Usuario logueado: usar Cognito para leer reseñas
+                clientResenas = clientAuth;
+            }
+            cargarResenas();
+
+            if (!user) return;
+
+            document.getElementById('header-auth').style.display = 'none';
+            document.getElementById('header-user').style.display = 'flex';
+
+            try {
+                const { data: perfiles } = await clientAuth.models.UserProfile.list({
+                    filter: { userId: { eq: user.userId } }
+                });
+                let perfil = perfiles && perfiles[0];
+
+                // Si no tiene UserProfile, lo creamos con los datos de Cognito
+                if (!perfil) {
+                    const attrs = await getAtributosUsuario();
+                    const { data: nuevo } = await clientAuth.models.UserProfile.create({
+                        userId: user.userId,
+                        nombre: attrs.nombre,
+                        apellido: attrs.apellido,
+                    });
+                    perfil = nuevo;
+                }
+
+                if (perfil) {
+                    document.getElementById('header-nombre').textContent = perfil.nombre;
+                    document.getElementById('dropdown-nombre').textContent =
+                        `${perfil.nombre} ${perfil.apellido}`;
+
+                    if (perfil.fotoPerfil) {
+                        const { url } = await getUrl({ path: perfil.fotoPerfil });
+                        const img = document.getElementById('avatar-img');
+                        img.src = url.toString();
+                        img.style.display = 'block';
+                        document.getElementById('avatar-icon').style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                // Muestra ícono genérico si falla la carga del perfil
+            }
+        }
+
+        function toggleDropdown() {
+            const d = document.getElementById('user-dropdown');
+            d.classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('header-user').contains(e.target)) {
+                document.getElementById('user-dropdown').classList.remove('open');
+            }
+        });
+
+        window.toggleDropdown = toggleDropdown;
+
+        async function cerrarSesion() {
+            await logout();
+        }
+        window.cerrarSesion = cerrarSesion;
+
+        inicializarHeader();
+    </script>
 
 </body>
 </html>

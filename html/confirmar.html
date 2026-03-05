@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Email - Reseñas de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+
+            <div class="login-logo">
+                <i class="fa-solid fa-envelope-circle-check"></i>
+            </div>
+
+            <h1>Confirmá tu email</h1>
+            <p class="subtitle">Te enviamos un código de 6 dígitos a tu email</p>
+
+            <div id="error-msg" style="display:none; color:#e74c3c; font-size:0.875rem; text-align:center; padding:8px; background:#fdf0ef; border-radius:6px;"></div>
+
+            <form id="confirm-form">
+                <div class="input-group">
+                    <label for="codigo"><i class="fa-solid fa-key"></i> Código de verificación</label>
+                    <input type="text" id="codigo" placeholder="Ej: 123456" maxlength="6" required>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btn-confirmar">
+                    <i class="fa-solid fa-check"></i> Confirmar cuenta
+                </button>
+            </form>
+
+            <p class="register-link" style="margin-top:16px;">
+                ¿No recibiste el código? <a href="#" id="reenviar">Reenviar</a>
+            </p>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { confirmarCodigo } from './auth.js';
+
+        const email = sessionStorage.getItem('pendingEmail');
+
+        document.getElementById('confirm-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-confirmar');
+            const errorMsg = document.getElementById('error-msg');
+            const codigo = document.getElementById('codigo').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Confirmando...';
+            errorMsg.style.display = 'none';
+
+            try {
+                await confirmarCodigo(email, codigo);
+                sessionStorage.removeItem('pendingEmail');
+                location.href = 'login.html';
+            } catch (err) {
+                errorMsg.textContent = err.message || 'Código incorrecto';
+                errorMsg.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar cuenta';
+            }
+        });
+    </script>
+
+</body>
+</html>

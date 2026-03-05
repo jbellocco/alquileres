@@ -233,8 +233,36 @@ form {
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 480px) {
+
+/* Tablet: 768px */
+@media (max-width: 768px) {
+    .login-wrapper {
+        padding: 16px;
+        align-items: flex-start;
+        padding-top: 40px;
+    }
+
     .login-card {
-        padding: 28px 20px;
+        padding: 36px 28px;
+    }
+}
+
+/* Mobile: 480px */
+@media (max-width: 480px) {
+    .login-wrapper {
+        padding: 12px;
+        padding-top: 24px;
+    }
+
+    .login-card {
+        padding: 28px 18px;
+    }
+
+    h1 {
+        font-size: 1.3rem;
+    }
+
+    .btn-primary {
+        font-size: 0.9rem;
     }
 }

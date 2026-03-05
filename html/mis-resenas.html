@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reseñas - Reseñas de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="nueva-resena.css">
+    <style>
+        .resenas-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .resena-item {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .resena-foto {
+            width: 140px;
+            min-height: 140px;
+            flex-shrink: 0;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .resena-foto img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .resena-foto i {
+            font-size: 2rem;
+            color: #ced4da;
+        }
+
+        .resena-body {
+            flex: 1;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .resena-titulo {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .resena-ubicacion {
+            font-size: 0.875rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .resena-estrellas {
+            color: #f5a623;
+            font-size: 0.85rem;
+        }
+
+        .resena-texto {
+            font-size: 0.875rem;
+            color: #495057;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .resena-fecha {
+            font-size: 0.775rem;
+            color: #adb5bd;
+            margin-top: auto;
+        }
+
+        .resena-actions {
+            display: flex;
+            align-items: center;
+            padding: 18px 16px;
+            flex-shrink: 0;
+        }
+
+        .btn-borrar {
+            background: #fff5f5;
+            border: 1.5px solid #e74c3c;
+            color: #e74c3c;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.825rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-borrar:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ced4da;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        /* Modal de confirmación */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 14px;
+            padding: 32px 28px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+
+        .modal i {
+            font-size: 2.2rem;
+            color: #e74c3c;
+            margin-bottom: 14px;
+        }
+
+        .modal h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-cancelar-modal {
+            background: #f8f9fa;
+            border: 1.5px solid #e9ecef;
+            color: #495057;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-cancelar-modal:hover { background: #e9ecef; }
+
+        .btn-confirmar-borrar {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: background 0.2s;
+        }
+
+        .btn-confirmar-borrar:hover { background: #c0392b; }
+
+        @media (max-width: 600px) {
+            .resena-item { flex-direction: column; }
+            .resena-foto { width: 100%; height: 160px; }
+            .resena-actions { padding: 0 18px 18px; justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><a href="index.html" style="color:inherit; text-decoration:none;"><i class="fa-solid fa-house"></i> Reseñas de Alquileres</a></h1>
+        <div id="header-user" style="position:relative; display:flex; align-items:center; gap:10px;">
+            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+            </button>
+            <span id="header-nombre" class="header-nombre"></span>
+            <div id="user-dropdown" class="user-dropdown">
+                <span id="dropdown-nombre" class="dropdown-nombre"></span>
+                <hr class="dropdown-divider">
+                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main style="max-width:720px; margin:40px auto; padding:0 20px;">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <h2 style="font-size:1.3rem; font-weight:700; color:#2c3e50;">
+                <i class="fa-solid fa-list" style="color:#e07b10;"></i> Mis reseñas
+            </h2>
+            <a href="nueva-resena.html" style="background:#e07b10; color:white; border:none; padding:9px 18px; border-radius:8px; font-family:Inter,sans-serif; font-size:0.875rem; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:7px;">
+                <i class="fa-solid fa-plus"></i> Nueva reseña
+            </a>
+        </div>
+
+        <div id="resenas-lista">
+            <p style="text-align:center; color:#6c757d; padding:40px 0;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Modal confirmar borrado -->
+    <div class="modal-overlay" id="modal-borrar">
+        <div class="modal">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h3>¿Borrar reseña?</h3>
+            <p>Esta acción no se puede deshacer.</p>
+            <div class="modal-actions">
+                <button class="btn-cancelar-modal" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-confirmar-borrar" id="btn-confirmar">
+                    <i class="fa-solid fa-trash"></i> Borrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
+        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
+    </footer>
+
+    <script type="module">
+        import { Amplify } from 'https://esm.sh/aws-amplify@6';
+        import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { awsConfig } from './aws-config.js';
+        import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+
+        Amplify.configure(awsConfig);
+        const client = generateClient();
+
+        // Redirigir si no está logueado
+        const usuario = await getUsuarioActual();
+        if (!usuario) { location.href = 'login.html'; }
+
+        // Header
+        try {
+            const { data: perfiles } = await client.models.UserProfile.list({
+                filter: { userId: { eq: usuario.userId } }
+            });
+            let perfil = perfiles && perfiles[0];
+            if (!perfil) {
+                const attrs = await getAtributosUsuario();
+                const { data: nuevo } = await client.models.UserProfile.create({
+                    userId: usuario.userId,
+                    nombre: attrs.nombre,
+                    apellido: attrs.apellido,
+                });
+                perfil = nuevo;
+            }
+            if (perfil) {
+                document.getElementById('header-nombre').textContent = perfil.nombre;
+                document.getElementById('dropdown-nombre').textContent = `${perfil.nombre} ${perfil.apellido}`;
+            }
+        } catch (e) {}
+
+        // Cargar reseñas del usuario
+        let misResenas = [];
+
+        async function cargarMisResenas() {
+            try {
+                const { data } = await client.models.Resena.list({
+                    filter: { autorId: { eq: usuario.userId } }
+                });
+                misResenas = data;
+                renderLista(data);
+            } catch (err) {
+                document.getElementById('resenas-lista').innerHTML =
+                    `<p style="text-align:center; color:#e74c3c; padding:40px 0;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar reseñas
+                    </p>`;
+            }
+        }
+
+        function estrellas(puntaje) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += i <= puntaje
+                    ? '<i class="fa-solid fa-star"></i>'
+                    : '<i class="fa-regular fa-star"></i>';
+            }
+            return html;
+        }
+
+        function formatFecha(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function renderLista(lista) {
+            const contenedor = document.getElementById('resenas-lista');
+            if (lista.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <p>Todavía no publicaste ninguna reseña.</p>
+                        <a href="nueva-resena.html" style="background:#e07b10; color:white; padding:11px 24px; border-radius:8px; font-family:Inter,sans-serif; font-size:0.95rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-plus"></i> Publicar primera reseña
+                        </a>
+                    </div>`;
+                return;
+            }
+
+            contenedor.innerHTML = `<div class="resenas-lista">${lista.map((r, i) => `
+                <div class="resena-item">
+                    <div class="resena-foto" id="foto-${i}">
+                        <i class="fa-solid fa-image"></i>
+                    </div>
+                    <div class="resena-body">
+                        <div class="resena-titulo">${r.titulo}</div>
+                        <div class="resena-ubicacion">
+                            <i class="fa-solid fa-map-pin" style="color:#e07b10;"></i>
+                            ${r.barrio} — ${r.zona}
+                        </div>
+                        <div class="resena-estrellas">${estrellas(r.puntaje)} ${r.puntaje}/5</div>
+                        <div class="resena-texto">${r.texto}</div>
+                        <div class="resena-fecha"><i class="fa-regular fa-calendar"></i> ${formatFecha(r.createdAt)}</div>
+                    </div>
+                    <div class="resena-actions">
+                        <button class="btn-borrar" onclick="confirmarBorrar('${r.id}')">
+                            <i class="fa-solid fa-trash"></i> Borrar
+                        </button>
+                    </div>
+                </div>
+            `).join('')}</div>`;
+
+            // Cargar imágenes
+            lista.forEach(async (r, i) => {
+                if (r.imagenes && r.imagenes[0]) {
+                    try {
+                        const { url } = await getUrl({ path: r.imagenes[0] });
+                        const wrap = document.getElementById(`foto-${i}`);
+                        if (wrap) wrap.innerHTML = `<img src="${url}" alt="foto">`;
+                    } catch (e) {}
+                }
+            });
+        }
+
+        // Borrado con modal de confirmación
+        let idABorrar = null;
+
+        window.confirmarBorrar = function(id) {
+            idABorrar = id;
+            document.getElementById('modal-borrar').classList.add('open');
+        };
+
+        window.cerrarModal = function() {
+            idABorrar = null;
+            document.getElementById('modal-borrar').classList.remove('open');
+        };
+
+        document.getElementById('btn-confirmar').addEventListener('click', async () => {
+            if (!idABorrar) return;
+            const btn = document.getElementById('btn-confirmar');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Borrando...';
+            try {
+                await client.models.Resena.delete({ id: idABorrar });
+                cerrarModal();
+                cargarMisResenas();
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-trash"></i> Borrar';
+            }
+        });
+
+        // Cerrar modal al hacer click fuera
+        document.getElementById('modal-borrar').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-borrar')) cerrarModal();
+        });
+
+        function toggleDropdown() {
+            document.getElementById('user-dropdown').classList.toggle('open');
+        }
+        window.toggleDropdown = toggleDropdown;
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('header-user').contains(e.target)) {
+                document.getElementById('user-dropdown').classList.remove('open');
+            }
+        });
+
+        async function cerrarSesion() { await logout(); }
+        window.cerrarSesion = cerrarSesion;
+
+        cargarMisResenas();
+    </script>
+
+</body>
+</html>
