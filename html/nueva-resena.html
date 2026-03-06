@@ -42,29 +42,120 @@
                 <fieldset>
                     <legend><i class="fa-solid fa-location-dot"></i> Ubicación</legend>
 
-                    <div class="input-group">
-                        <label for="zona">Zona</label>
-                        <select id="zona">
-                            <option value="" disabled selected>Seleccioná una zona</option>
-                            <option>CABA</option>
-                            <option>Buenos Aires</option>
-                            <option>Córdoba</option>
-                            <option>Santa Fe</option>
-                        </select>
+                    <div class="input-row-2">
+                        <div class="input-group">
+                            <label for="provincia">Jurisdicción</label>
+                            <select id="provincia" onchange="onJurisdiccionChange()">
+                                <option value="" disabled selected>Seleccioná</option>
+                                <option>CABA</option>
+                                <option>Buenos Aires</option>
+                                <option>Córdoba</option>
+                                <option>Santa Fe</option>
+                                <option>Mendoza</option>
+                                <option>Tucumán</option>
+                                <option>Entre Ríos</option>
+                                <option>Salta</option>
+                                <option>Misiones</option>
+                                <option>Chaco</option>
+                                <option>Corrientes</option>
+                                <option>Santiago del Estero</option>
+                                <option>San Juan</option>
+                                <option>Jujuy</option>
+                                <option>Río Negro</option>
+                                <option>Neuquén</option>
+                                <option>Formosa</option>
+                                <option>Chubut</option>
+                                <option>San Luis</option>
+                                <option>Catamarca</option>
+                                <option>La Rioja</option>
+                                <option>La Pampa</option>
+                                <option>Santa Cruz</option>
+                                <option>Tierra del Fuego</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group" id="partido-group">
+                            <label for="partido">Partido / Localidad</label>
+                            <input type="text" id="partido" placeholder="Ej: La Plata, Rosario...">
+                        </div>
                     </div>
 
-                    <div class="input-group">
-                        <label for="barrio">Barrio / Partido</label>
-                        <input type="text" id="barrio" placeholder="Ej: Palermo, Flores, San Isidro...">
+                    <div class="input-row-2">
+                        <div class="input-group">
+                            <label for="barrio">Barrio</label>
+                            <input type="text" id="barrio" placeholder="Ej: Palermo, Alberdi...">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="codigoPostal">Código postal</label>
+                            <input type="text" id="codigoPostal" placeholder="Ej: 1900" maxlength="8">
+                        </div>
                     </div>
 
                     <div class="input-group">
                         <label for="direccion">
-                            Dirección
-                            <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es pública</span>
+                            Dirección (calle y número)
+                            <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es pública exacta</span>
                         </label>
-                        <input type="text" id="direccion" placeholder="Ej: Av. Corrientes 1234">
+                        <input type="text" id="direccion" placeholder="Ej: Av. Corrientes 6156">
                     </div>
+
+                    <!-- Tipo de vivienda -->
+                    <div class="input-group">
+                        <label>Tipo de vivienda</label>
+                        <div class="toggle-row">
+                            <label class="toggle-option">
+                                <input type="radio" name="tipoVivienda" value="casa" checked onchange="onTipoViviendaChange()">
+                                <span><i class="fa-solid fa-house"></i> Casa</span>
+                            </label>
+                            <label class="toggle-option">
+                                <input type="radio" name="tipoVivienda" value="edificio" onchange="onTipoViviendaChange()">
+                                <span><i class="fa-solid fa-building"></i> Edificio</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="edificio-fields" style="display:none;">
+                        <div class="input-row-2">
+                            <div class="input-group">
+                                <label for="piso">
+                                    Piso
+                                    <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es público</span>
+                                </label>
+                                <input type="text" id="piso" placeholder="Ej: 3">
+                            </div>
+                            <div class="input-group">
+                                <label for="depto">
+                                    Departamento
+                                    <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es público</span>
+                                </label>
+                                <input type="text" id="depto" placeholder="Ej: B">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inmobiliaria -->
+                    <div class="input-group">
+                        <label>¿Alquilaste por inmobiliaria?</label>
+                        <div class="toggle-row">
+                            <label class="toggle-option">
+                                <input type="radio" name="porInmobiliaria" value="no" checked onchange="onInmobiliariaChange()">
+                                <span>No</span>
+                            </label>
+                            <label class="toggle-option">
+                                <input type="radio" name="porInmobiliaria" value="si" onchange="onInmobiliariaChange()">
+                                <span>Sí</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="inmobiliaria-field" style="display:none;">
+                        <div class="input-group">
+                            <label for="nombreInmobiliaria">Nombre de la inmobiliaria</label>
+                            <input type="text" id="nombreInmobiliaria" placeholder="Ej: Remax, Century 21...">
+                        </div>
+                    </div>
+
                 </fieldset>
 
                 <!-- TU EXPERIENCIA -->
@@ -150,6 +241,26 @@
     </footer>
 
     <script>
+        // Ocultar partido si es CABA
+        function onJurisdiccionChange() {
+            const esCABA = document.getElementById('provincia').value === 'CABA';
+            const grupo = document.getElementById('partido-group');
+            grupo.style.display = esCABA ? 'none' : 'block';
+            if (esCABA) document.getElementById('partido').value = '';
+        }
+
+        // Toggle tipo de vivienda
+        function onTipoViviendaChange() {
+            const esEdificio = document.querySelector('input[name="tipoVivienda"]:checked').value === 'edificio';
+            document.getElementById('edificio-fields').style.display = esEdificio ? 'block' : 'none';
+        }
+
+        // Toggle inmobiliaria
+        function onInmobiliariaChange() {
+            const esSi = document.querySelector('input[name="porInmobiliaria"]:checked').value === 'si';
+            document.getElementById('inmobiliaria-field').style.display = esSi ? 'block' : 'none';
+        }
+
         // Preview de imágenes
         document.getElementById('imagenes').addEventListener('change', function () {
             const preview = document.getElementById('image-preview');
@@ -206,6 +317,11 @@
         Amplify.configure(awsConfig);
         const client = generateClient();
 
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+
         // Verificar sesión al cargar la página
         const usuarioActual = await getUsuarioActual();
         if (!usuarioActual) {
@@ -228,9 +344,10 @@
                 perfil = nuevo;
             }
             if (perfil) {
-                document.getElementById('header-nombre').textContent = perfil.nombre;
-                document.getElementById('dropdown-nombre').textContent =
-                    `${perfil.nombre} ${perfil.apellido}`;
+                const nombre = capitalizar(perfil.nombre);
+                const apellido = capitalizar(perfil.apellido);
+                document.getElementById('header-nombre').textContent = nombre;
+                document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
             }
         } catch (e) { /* muestra ícono genérico */ }
 
@@ -253,14 +370,22 @@
             const btn = document.querySelector('.btn-submit');
             const errorDiv = document.getElementById('form-error');
 
-            const zona    = document.getElementById('zona').value;
-            const barrio  = document.getElementById('barrio').value.trim();
-            const titulo  = document.getElementById('titulo').value.trim();
-            const texto   = document.getElementById('resena').value.trim();
-            const puntaje = document.querySelector('input[name="puntaje"]:checked')?.value;
+            const provincia   = document.getElementById('provincia').value;
+            const partido     = document.getElementById('partido').value.trim();
+            const barrio      = document.getElementById('barrio').value.trim();
+            const codigoPostal = document.getElementById('codigoPostal').value.trim();
+            const direccion   = document.getElementById('direccion').value.trim();
+            const tipoVivienda = document.querySelector('input[name="tipoVivienda"]:checked')?.value;
+            const piso        = tipoVivienda === 'edificio' ? document.getElementById('piso').value.trim() : null;
+            const depto       = tipoVivienda === 'edificio' ? document.getElementById('depto').value.trim() : null;
+            const esPorInmob  = document.querySelector('input[name="porInmobiliaria"]:checked')?.value === 'si';
+            const nombreInmobiliaria = esPorInmob ? document.getElementById('nombreInmobiliaria').value.trim() : null;
+            const titulo      = document.getElementById('titulo').value.trim();
+            const texto       = document.getElementById('resena').value.trim();
+            const puntaje     = document.querySelector('input[name="puntaje"]:checked')?.value;
 
-            if (!zona || !barrio || !titulo || !texto || !puntaje) {
-                errorDiv.textContent = 'Por favor completá todos los campos y seleccioná un puntaje.';
+            if (!provincia || !barrio || !direccion || !titulo || !texto || !puntaje) {
+                errorDiv.textContent = 'Por favor completá: provincia, barrio, dirección, título, reseña y puntaje.';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -290,8 +415,17 @@
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...';
 
                 await client.models.Resena.create({
-                    zona,
+                    zona: provincia,        // backward compat
+                    provincia,
+                    partido:            partido || null,
                     barrio,
+                    codigoPostal:       codigoPostal || null,
+                    direccion,
+                    tipoVivienda,
+                    piso,
+                    depto,
+                    porInmobiliaria:    esPorInmob,
+                    nombreInmobiliaria,
                     titulo,
                     texto,
                     puntaje: parseInt(puntaje),

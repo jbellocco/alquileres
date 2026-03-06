@@ -219,6 +219,20 @@
 
         .btn-confirmar-borrar:hover { background: #c0392b; }
 
+        .tag {
+            font-size: 0.75rem;
+            background: #f1f3f5;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 500;
+        }
+
+        .tag-inmob {
+            background: #fff3e0;
+            color: #c46a09;
+        }
+
         @media (max-width: 600px) {
             .resena-item { flex-direction: column; }
             .resena-foto { width: 100%; height: 160px; }
@@ -294,6 +308,11 @@
         Amplify.configure(awsConfig);
         const client = generateClient();
 
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+
         // Redirigir si no está logueado
         const usuario = await getUsuarioActual();
         if (!usuario) { location.href = 'login.html'; }
@@ -314,8 +333,10 @@
                 perfil = nuevo;
             }
             if (perfil) {
-                document.getElementById('header-nombre').textContent = perfil.nombre;
-                document.getElementById('dropdown-nombre').textContent = `${perfil.nombre} ${perfil.apellido}`;
+                const nombre = capitalizar(perfil.nombre);
+                const apellido = capitalizar(perfil.apellido);
+                document.getElementById('header-nombre').textContent = nombre;
+                document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
             }
         } catch (e) {}
 
@@ -367,7 +388,19 @@
                 return;
             }
 
-            contenedor.innerHTML = `<div class="resenas-lista">${lista.map((r, i) => `
+            contenedor.innerHTML = `<div class="resenas-lista">${lista.map((r, i) => {
+                const provincia = r.provincia || r.zona || '';
+                const ubicacion = [r.barrio, provincia].filter(Boolean).join(' — ');
+                const detalleDir = [
+                    r.direccion,
+                    r.tipoVivienda === 'edificio' && r.piso ? `Piso ${r.piso}${r.depto ? ' ' + r.depto : ''}` : null
+                ].filter(Boolean).join(' · ');
+                const tags = [
+                    r.partido ? `<span class="tag">${r.partido}</span>` : '',
+                    r.codigoPostal ? `<span class="tag">CP ${r.codigoPostal}</span>` : '',
+                    r.porInmobiliaria && r.nombreInmobiliaria ? `<span class="tag tag-inmob">${r.nombreInmobiliaria}</span>` : '',
+                ].filter(Boolean).join('');
+                return `
                 <div class="resena-item">
                     <div class="resena-foto" id="foto-${i}">
                         <i class="fa-solid fa-image"></i>
@@ -376,8 +409,10 @@
                         <div class="resena-titulo">${r.titulo}</div>
                         <div class="resena-ubicacion">
                             <i class="fa-solid fa-map-pin" style="color:#e07b10;"></i>
-                            ${r.barrio} — ${r.zona}
+                            ${ubicacion}
                         </div>
+                        ${detalleDir ? `<div style="font-size:0.8rem; color:#6c757d; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${detalleDir}</div>` : ''}
+                        ${tags ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">${tags}</div>` : ''}
                         <div class="resena-estrellas">${estrellas(r.puntaje)} ${r.puntaje}/5</div>
                         <div class="resena-texto">${r.texto}</div>
                         <div class="resena-fecha"><i class="fa-regular fa-calendar"></i> ${formatFecha(r.createdAt)}</div>
@@ -387,8 +422,8 @@
                             <i class="fa-solid fa-trash"></i> Borrar
                         </button>
                     </div>
-                </div>
-            `).join('')}</div>`;
+                </div>`;
+            }).join('')}</div>`;
 
             // Cargar imágenes
             lista.forEach(async (r, i) => {

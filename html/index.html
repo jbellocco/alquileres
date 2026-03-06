@@ -29,9 +29,11 @@
                 <span id="dropdown-nombre" class="dropdown-nombre"></span>
                 <hr class="dropdown-divider">
                 <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="document.getElementById('foto-perfil-input').click()"><i class="fa-solid fa-camera"></i> Cambiar foto</button>
                 <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
             </div>
         </div>
+        <input type="file" id="foto-perfil-input" accept="image/*" style="display:none;">
     </header>
 
     <main>
@@ -69,7 +71,7 @@
     <script type="module">
         import { Amplify } from 'https://esm.sh/aws-amplify@6';
         import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
-        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { getUrl, uploadData } from 'https://esm.sh/aws-amplify@6/storage';
         import { awsConfig } from './aws-config.js';
         import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
 
@@ -79,6 +81,12 @@
 
         let todasLasResenas = [];
         let clientResenas = clientIAM; // se actualiza a clientAuth si hay sesión
+        let perfilActual = null; // se guarda para poder actualizarlo
+
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
 
         function estrellas(puntaje) {
             let html = '';
@@ -90,23 +98,38 @@
             return html;
         }
 
+        function aproximarDireccion(dir) {
+            if (!dir) return null;
+            // Redondea el número de la calle hacia abajo a la centena más cercana
+            return dir.replace(/\d{3,}/, n => Math.floor(parseInt(n) / 100) * 100);
+        }
+
         function renderResenas(lista) {
             const grid = document.getElementById('resenas-grid');
             if (lista.length === 0) {
                 grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron reseñas</p>';
                 return;
             }
-            grid.innerHTML = lista.map((r, i) => `
+            grid.innerHTML = lista.map((r, i) => {
+                const dirAprox = aproximarDireccion(r.direccion);
+                const ubicacion = [r.barrio, r.provincia || r.zona].filter(Boolean).join(' — ');
+                const inmob = r.porInmobiliaria && r.nombreInmobiliaria
+                    ? `<span style="font-size:0.78rem; background:#fff3e0; color:#c46a09; padding:2px 8px; border-radius:999px; font-weight:500;">${r.nombreInmobiliaria}</span>`
+                    : '';
+                return `
                 <article>
                     <div id="img-wrap-${i}" style="background:#f8f9fa; height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                         <i class="fa-solid fa-image" style="font-size:2rem; color:#ced4da;"></i>
                     </div>
-                    <h3><i class="fa-solid fa-map-pin"></i> ${r.barrio} — ${r.zona}</h3>
-                    <p>${estrellas(r.puntaje)} ${r.puntaje}/5</p>
-                    <p><strong>${r.titulo}</strong></p>
-                    <p>${r.texto}</p>
-                </article>
-            `).join('');
+                    <div class="card-body">
+                        <h3><i class="fa-solid fa-map-pin"></i> ${ubicacion}</h3>
+                        ${dirAprox ? `<p style="display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${dirAprox} ${inmob}</p>` : (inmob ? `<p>${inmob}</p>` : '')}
+                        <p class="card-stars">${estrellas(r.puntaje)} ${r.puntaje}/5</p>
+                        <p><strong style="color:#2c3e50;">${r.titulo}</strong></p>
+                        <p>${r.texto}</p>
+                    </div>
+                </article>`;
+            }).join('');
 
             // Cargar URLs de imágenes de forma asíncrona
             lista.forEach(async (r, i) => {
@@ -189,16 +212,14 @@
                 }
 
                 if (perfil) {
-                    document.getElementById('header-nombre').textContent = perfil.nombre;
-                    document.getElementById('dropdown-nombre').textContent =
-                        `${perfil.nombre} ${perfil.apellido}`;
+                    perfilActual = perfil;
+                    const nombre = capitalizar(perfil.nombre);
+                    const apellido = capitalizar(perfil.apellido);
+                    document.getElementById('header-nombre').textContent = nombre;
+                    document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
 
                     if (perfil.fotoPerfil) {
-                        const { url } = await getUrl({ path: perfil.fotoPerfil });
-                        const img = document.getElementById('avatar-img');
-                        img.src = url.toString();
-                        img.style.display = 'block';
-                        document.getElementById('avatar-icon').style.display = 'none';
+                        mostrarAvatarFoto(perfil.fotoPerfil);
                     }
                 }
             } catch (e) {
@@ -223,6 +244,42 @@
             await logout();
         }
         window.cerrarSesion = cerrarSesion;
+
+        async function mostrarAvatarFoto(path) {
+            try {
+                const { url } = await getUrl({ path });
+                const img = document.getElementById('avatar-img');
+                const icon = document.getElementById('avatar-icon');
+                img.src = url.toString();
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } catch (e) {}
+        }
+
+        async function subirFotoPerfil(file) {
+            if (!file || !perfilActual) return;
+            const ext = file.name.split('.').pop();
+            try {
+                const result = await uploadData({
+                    path: ({ identityId }) => `perfiles/${identityId}/foto.${ext}`,
+                    data: file,
+                    options: { contentType: file.type }
+                }).result;
+                await clientAuth.models.UserProfile.update({
+                    id: perfilActual.id,
+                    fotoPerfil: result.path
+                });
+                perfilActual.fotoPerfil = result.path;
+                await mostrarAvatarFoto(result.path);
+            } catch (e) {
+                console.error('Error al subir foto:', e);
+            }
+        }
+
+        document.getElementById('foto-perfil-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) subirFotoPerfil(file);
+        });
 
         inicializarHeader();
     </script>

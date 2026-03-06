@@ -180,6 +180,53 @@ legend {
     min-height: 110px;
 }
 
+/* ===== 2-COLUMN ROW ===== */
+.input-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.input-row-2 .input-group { margin-bottom: 0; }
+
+/* ===== TOGGLE ROW (casa/edificio, inmobiliaria) ===== */
+.toggle-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.toggle-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-option input[type="radio"] {
+    display: none;
+}
+
+.toggle-option span {
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--neutral-200);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--neutral-500);
+    background: var(--white);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.toggle-option input[type="radio"]:checked + span {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
 /* ===== STAR RATING ===== */
 .star-rating {
     display: flex;
@@ -627,6 +674,7 @@ footer i { color: var(--primary); }
 /* Mobile: 480px */
 @media (max-width: 480px) {
     .two-col { grid-template-columns: 1fr; }
+    .input-row-2 { grid-template-columns: 1fr; }
 
     header h1 { font-size: 1.2rem; }
     header div { flex-direction: column; width: 100%; }
