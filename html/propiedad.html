@@ -48,9 +48,10 @@
             display: block;
         }
 
-        .prop-img-placeholder {
+        .prop-img-wrap {
             width: 100%;
-            height: 200px;
+            height: 260px;
+            overflow: hidden;
             background: var(--neutral-100);
             display: flex;
             align-items: center;
@@ -59,29 +60,46 @@
             font-size: 3rem;
         }
 
+        .prop-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .prop-body {
-            padding: 28px 32px;
+            padding: 20px 28px 28px;
+            border-top: 3px solid var(--primary);
+        }
+
+        .prop-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .prop-titulo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
         }
 
         .prop-ubicacion {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-        .prop-ubicacion i { color: var(--primary); }
-
-        .prop-dir {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--neutral-500);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             margin-bottom: 16px;
         }
+        .prop-ubicacion i { color: var(--primary); font-size: 0.72rem; }
+
+        .prop-dir { display: none; }
 
         .prop-stats {
             display: flex;
@@ -378,12 +396,14 @@
                 document.getElementById('prop-contenido').innerHTML = `
                     <!-- CARD DE PROPIEDAD -->
                     <div class="prop-card">
-                        <div id="prop-img-wrap" class="prop-img-placeholder">
-                            <i class="fa-solid fa-building"></i>
+                        <div id="prop-img-wrap" class="prop-img-wrap">
+                            <div class="prop-img-placeholder">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
                         </div>
                         <div class="prop-body">
-                            <div class="prop-dir">
-                                ${[prop.calleDisplay, prop.alturaPublica].filter(Boolean).join(' ') || prop.displayAddress || ''}
+                            <div class="prop-header">
+                                <div class="prop-titulo">${[prop.calleDisplay, prop.alturaPublica].filter(Boolean).join(' ') || prop.displayAddress || prop.barrio}</div>
                                 ${inmobTag}
                             </div>
                             <div class="prop-ubicacion">
@@ -448,7 +468,7 @@
                     try {
                         const { url } = await getUrl({ path: revConImg.imagenes[0] });
                         document.getElementById('prop-img-wrap').innerHTML =
-                            `<img src="${url}" alt="foto" class="prop-img">`;
+                            `<img src="${url}" alt="foto" style="width:100%; height:100%; object-fit:cover; display:block;">`;
                     } catch (e) {}
                 }
 

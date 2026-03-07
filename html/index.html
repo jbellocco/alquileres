@@ -123,9 +123,11 @@
             }
             const ordenada = ordenarLista(lista);
             grid.innerHTML = ordenada.map((p, i) => {
-                const ubicacion = [p.barrio, p.partido, p.provincia].filter(Boolean).join(', ');
-                const calleAltura = [p.calleDisplay, p.alturaPublica].filter(Boolean).join(' ');
-                const titulo = calleAltura || ubicacion;
+                const ubicacion = [p.barrio, p.partido, p.provincia].filter(Boolean).join(' — ');
+                const dirPublica = p.displayAddress || [
+                    p.calleNormalizada ? p.calleNormalizada.replace(/\b\w/g, c => c.toUpperCase()) : '',
+                    p.alturaPublica
+                ].filter(Boolean).join(' ');
                 const prom  = p.puntajePromedio ? p.puntajePromedio.toFixed(1) : '–';
                 const total = p.totalResenas || 0;
                 const rec   = p.totalRecomiendan || 0;
@@ -145,8 +147,8 @@
                         <i class="fa-solid fa-building" style="font-size:2rem; color:#ced4da;"></i>
                     </div>
                     <div class="card-body">
-                        <h3>${titulo} ${inmob}</h3>
-                        <p style="font-size:0.82rem; color:#6c757d; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-map-pin" style="color:#e07b10; font-size:0.75rem;"></i> ${ubicacion}</p>
+                        <h3><i class="fa-solid fa-map-pin"></i> ${ubicacion}</h3>
+                        ${dirPublica ? `<p style="display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${dirPublica} ${inmob}</p>` : (inmob ? `<p>${inmob}</p>` : '')}
                         <p class="card-stars">${estrellas(p.puntajePromedio)} ${prom}/5</p>
                         <p style="font-size:0.82rem; color:#6c757d;"><i class="fa-solid fa-comment" style="color:#e07b10; font-size:0.75rem;"></i> ${total} reseña${total !== 1 ? 's' : ''}</p>
                         ${recBadge}
