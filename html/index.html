@@ -86,9 +86,9 @@
         const clientIAM = generateClient({ authMode: 'iam' });
         const clientAuth = generateClient(); // usa Cognito para datos privados
 
-        let todasLasResenas = [];
-        let clientResenas = clientIAM; // se actualiza a clientAuth si hay sesión
-        let perfilActual = null; // se guarda para poder actualizarlo
+        let todasLasProperties = [];
+        let clientData = clientIAM; // se actualiza a clientAuth si hay sesión
+        let perfilActual = null;
 
         function capitalizar(str) {
             if (!str) return '';
@@ -96,135 +96,131 @@
         }
 
         function estrellas(puntaje) {
+            const p = Math.round(puntaje || 0);
             let html = '';
             for (let i = 1; i <= 5; i++) {
-                html += i <= puntaje
+                html += i <= p
                     ? '<i class="fa-solid fa-star"></i>'
                     : '<i class="fa-regular fa-star"></i>';
             }
             return html;
         }
 
-        function aproximarDireccion(dir) {
-            if (!dir) return null;
-            // Redondea el número de la calle hacia abajo a la centena más cercana
-            return dir.replace(/\d{3,}/, n => Math.floor(parseInt(n) / 100) * 100);
-        }
-
-        const RECOMENDARIA_BADGE = {
-            'si':      { icon: 'fa-thumbs-up',    label: 'Lo recomiendo',    color: '#2e7d32', bg: '#e8f5e9' },
-            'no':      { icon: 'fa-thumbs-down',   label: 'No lo recomiendo', color: '#c0392b', bg: '#fdecea' },
-            'tal-vez': { icon: 'fa-scale-balanced', label: 'Tal vez',         color: '#c46a09', bg: '#fff3e0' },
-        };
-
         function ordenarLista(lista) {
             const orden = document.getElementById('orden').value;
             const copia = [...lista];
-            if (orden === 'mejor') copia.sort((a, b) => b.puntaje - a.puntaje);
-            else if (orden === 'peor') copia.sort((a, b) => a.puntaje - b.puntaje);
+            if (orden === 'mejor') copia.sort((a, b) => (b.puntajePromedio || 0) - (a.puntajePromedio || 0));
+            else if (orden === 'peor') copia.sort((a, b) => (a.puntajePromedio || 0) - (b.puntajePromedio || 0));
             else copia.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             return copia;
         }
 
-        function renderResenas(lista) {
+        function renderProperties(lista) {
             const grid = document.getElementById('resenas-grid');
             if (lista.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron reseñas</p>';
+                grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron propiedades</p>';
                 return;
             }
             const ordenada = ordenarLista(lista);
-            grid.innerHTML = ordenada.map((r, i) => {
-                const dirAprox = aproximarDireccion(r.direccion);
-                const ubicacion = [r.barrio, r.provincia || r.zona].filter(Boolean).join(' — ');
-                const inmob = r.porInmobiliaria && r.nombreInmobiliaria
-                    ? `<span style="font-size:0.78rem; background:#fff3e0; color:#c46a09; padding:2px 8px; border-radius:999px; font-weight:500;">${r.nombreInmobiliaria}</span>`
+            grid.innerHTML = ordenada.map((p, i) => {
+                const ubicacion = [p.barrio, p.partido, p.provincia].filter(Boolean).join(', ');
+                const calleAltura = [p.calleDisplay, p.alturaPublica].filter(Boolean).join(' ');
+                const titulo = calleAltura || ubicacion;
+                const prom  = p.puntajePromedio ? p.puntajePromedio.toFixed(1) : '–';
+                const total = p.totalResenas || 0;
+                const rec   = p.totalRecomiendan || 0;
+                const noRec = p.totalNoRecomiendan || 0;
+                const inmob = p.porInmobiliaria && p.nombreInmobiliaria
+                    ? `<span style="font-size:0.78rem; background:#fff3e0; color:#c46a09; padding:2px 8px; border-radius:999px; font-weight:500;">${p.nombreInmobiliaria}</span>`
                     : '';
-                const recBadge = r.recomendaria && RECOMENDARIA_BADGE[r.recomendaria] ? (() => {
-                    const b = RECOMENDARIA_BADGE[r.recomendaria];
-                    return `<p style="display:flex; align-items:center; gap:5px;">
-                        <span style="display:inline-flex; align-items:center; gap:5px; background:${b.bg}; color:${b.color}; padding:3px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;">
-                            <i class="fa-solid ${b.icon}"></i> ${b.label}
-                        </span>
-                    </p>`;
-                })() : '';
+                const recBadge = rec > 0 || noRec > 0
+                    ? `<p style="display:flex; gap:8px; flex-wrap:wrap;">
+                        ${rec > 0 ? `<span style="display:inline-flex; align-items:center; gap:4px; background:#e8f5e9; color:#2e7d32; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-thumbs-up"></i> ${rec}</span>` : ''}
+                        ${noRec > 0 ? `<span style="display:inline-flex; align-items:center; gap:4px; background:#fdecea; color:#c0392b; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-thumbs-down"></i> ${noRec}</span>` : ''}
+                      </p>`
+                    : '';
                 return `
-                <article style="cursor:pointer;" onclick="location.href='resena-detalle.html?id=${r.id}'">
+                <article style="cursor:pointer;" onclick="location.href='propiedad.html?id=${p.id}'">
                     <div id="img-wrap-${i}" style="background:#f8f9fa; height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                        <i class="fa-solid fa-image" style="font-size:2rem; color:#ced4da;"></i>
+                        <i class="fa-solid fa-building" style="font-size:2rem; color:#ced4da;"></i>
                     </div>
                     <div class="card-body">
-                        <h3><i class="fa-solid fa-map-pin"></i> ${ubicacion}</h3>
-                        ${dirAprox ? `<p style="display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${dirAprox} ${inmob}</p>` : (inmob ? `<p>${inmob}</p>` : '')}
-                        <p class="card-stars">${estrellas(r.puntaje)} ${r.puntaje}/5</p>
-                        <p><strong style="color:#2c3e50;">${r.titulo}</strong></p>
-                        <p>${r.texto}</p>
+                        <h3>${titulo} ${inmob}</h3>
+                        <p style="font-size:0.82rem; color:#6c757d; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-map-pin" style="color:#e07b10; font-size:0.75rem;"></i> ${ubicacion}</p>
+                        <p class="card-stars">${estrellas(p.puntajePromedio)} ${prom}/5</p>
+                        <p style="font-size:0.82rem; color:#6c757d;"><i class="fa-solid fa-comment" style="color:#e07b10; font-size:0.75rem;"></i> ${total} reseña${total !== 1 ? 's' : ''}</p>
                         ${recBadge}
                     </div>
                 </article>`;
             }).join('');
 
-            // Cargar URLs de imágenes de forma asíncrona
-            ordenada.forEach(async (r, i) => {
-                if (r.imagenes && r.imagenes[0]) {
-                    try {
-                        const { url } = await getUrl({ path: r.imagenes[0] });
+            // Cargar imagen de la primera reseña de cada propiedad de forma asíncrona
+            ordenada.forEach(async (p, i) => {
+                try {
+                    const { data: reviews } = await clientData.models.Review.list({
+                        filter: { propertyId: { eq: p.id } },
+                        limit: 1
+                    });
+                    const rev = reviews && reviews[0];
+                    if (rev && rev.imagenes && rev.imagenes[0]) {
+                        const { url } = await getUrl({ path: rev.imagenes[0] });
                         const wrap = document.getElementById(`img-wrap-${i}`);
                         if (wrap) wrap.innerHTML = `<img src="${url}" alt="foto" style="width:100%;height:100%;object-fit:cover;">`;
-                    } catch (e) {}
-                }
+                    }
+                } catch (e) {}
             });
         }
 
-        async function cargarResenas() {
+        async function cargarProperties() {
             try {
-                const { data } = await clientResenas.models.Resena.list({ limit: 20 });
-                todasLasResenas = data;
-                renderResenas(data);
+                const { data } = await clientData.models.Property.list({ limit: 50 });
+                todasLasProperties = data;
+                renderProperties(data);
             } catch (err) {
-                console.error('Error cargarResenas:', err);
+                console.error('Error cargarProperties:', err);
                 document.getElementById('resenas-grid').innerHTML =
                     `<p style="text-align:center; color:#e74c3c; grid-column:1/-1; padding:40px 0;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar reseñas<br>
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar propiedades<br>
                         <small style="font-size:0.8rem; color:#aaa;">${err.message || err}</small>
                     </p>`;
             }
         }
 
-        // Filtro por zona
+        // Filtro por zona (provincia)
         document.querySelectorAll('.filtro-zona').forEach(btn => {
             btn.addEventListener('click', () => {
                 const zona = btn.dataset.zona;
                 const filtradas = zona
-                    ? todasLasResenas.filter(r => r.zona === zona)
-                    : todasLasResenas;
-                renderResenas(filtradas);
+                    ? todasLasProperties.filter(p => p.provincia === zona)
+                    : todasLasProperties;
+                renderProperties(filtradas);
             });
         });
 
         // Buscador
         document.getElementById('buscador').addEventListener('input', (e) => {
             const q = e.target.value.toLowerCase();
-            const filtradas = todasLasResenas.filter(r =>
-                r.barrio.toLowerCase().includes(q) ||
-                r.zona.toLowerCase().includes(q) ||
-                r.titulo.toLowerCase().includes(q)
+            const filtradas = todasLasProperties.filter(p =>
+                (p.barrio || '').toLowerCase().includes(q) ||
+                (p.provincia || '').toLowerCase().includes(q) ||
+                (p.partido || '').toLowerCase().includes(q) ||
+                (p.displayAddress || '').toLowerCase().includes(q)
             );
-            renderResenas(filtradas);
+            renderProperties(filtradas);
         });
 
         // Orden
         document.getElementById('orden').addEventListener('change', () => {
-            renderResenas(todasLasResenas);
+            renderProperties(todasLasProperties);
         });
 
         // ===== HEADER AUTH =====
         async function inicializarHeader() {
             const user = await getUsuarioActual();
             if (user) {
-                // Usuario logueado: usar Cognito para leer reseñas
-                clientResenas = clientAuth;
+                clientData = clientAuth;
             }
-            cargarResenas();
+            cargarProperties();
 
             if (!user) return;
 

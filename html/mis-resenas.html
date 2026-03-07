@@ -254,9 +254,11 @@
                 <span id="dropdown-nombre" class="dropdown-nombre"></span>
                 <hr class="dropdown-divider">
                 <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="document.getElementById('foto-perfil-input').click()"><i class="fa-solid fa-camera"></i> Cambiar foto</button>
                 <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
             </div>
         </div>
+        <input type="file" id="foto-perfil-input" accept="image/*" style="display:none;">
     </header>
 
     <main style="max-width:720px; margin:40px auto; padding:0 20px;">
@@ -301,9 +303,10 @@
     <script type="module">
         import { Amplify } from 'https://esm.sh/aws-amplify@6';
         import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
-        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { getUrl, uploadData } from 'https://esm.sh/aws-amplify@6/storage';
         import { awsConfig } from './aws-config.js';
         import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+        import { actualizarStatsAlBorrar } from './property-utils.js';
 
         Amplify.configure(awsConfig);
         const client = generateClient();
@@ -318,6 +321,7 @@
         if (!usuario) { location.href = 'login.html'; }
 
         // Header
+        let perfilActual = null;
         try {
             const { data: perfiles } = await client.models.UserProfile.list({
                 filter: { userId: { eq: usuario.userId } }
@@ -333,23 +337,67 @@
                 perfil = nuevo;
             }
             if (perfil) {
+                perfilActual = perfil;
                 const nombre = capitalizar(perfil.nombre);
                 const apellido = capitalizar(perfil.apellido);
                 document.getElementById('header-nombre').textContent = nombre;
                 document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
+                if (perfil.fotoPerfil) mostrarAvatarFoto(perfil.fotoPerfil);
             }
         } catch (e) {}
 
+        async function mostrarAvatarFoto(path) {
+            try {
+                const { url } = await getUrl({ path });
+                const img = document.getElementById('avatar-img');
+                const icon = document.getElementById('avatar-icon');
+                img.src = url.toString();
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } catch (e) {}
+        }
+
+        async function subirFotoPerfil(file) {
+            if (!file || !perfilActual) return;
+            const ext = file.name.split('.').pop();
+            try {
+                const result = await uploadData({
+                    path: ({ identityId }) => `perfiles/${identityId}/foto.${ext}`,
+                    data: file,
+                    options: { contentType: file.type }
+                }).result;
+                await client.models.UserProfile.update({ id: perfilActual.id, fotoPerfil: result.path });
+                perfilActual.fotoPerfil = result.path;
+                await mostrarAvatarFoto(result.path);
+            } catch (e) { console.error('Error al subir foto:', e); }
+        }
+
+        document.getElementById('foto-perfil-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) subirFotoPerfil(file);
+        });
+
         // Cargar reseñas del usuario
-        let misResenas = [];
+        let misItems = []; // Array de { review, property }
 
         async function cargarMisResenas() {
             try {
-                const { data } = await client.models.Resena.list({
+                const { data: reviews } = await client.models.Review.list({
                     filter: { autorId: { eq: usuario.userId } }
                 });
-                misResenas = data;
-                renderLista(data);
+
+                // Fetch properties in parallel (deduplicadas)
+                const propIds = [...new Set(reviews.map(r => r.propertyId).filter(Boolean))];
+                const propMap = {};
+                await Promise.all(propIds.map(async (pid) => {
+                    try {
+                        const { data: prop } = await client.models.Property.get({ id: pid });
+                        if (prop) propMap[pid] = prop;
+                    } catch (e) {}
+                }));
+
+                misItems = reviews.map(r => ({ review: r, property: propMap[r.propertyId] || null }));
+                renderLista(misItems);
             } catch (err) {
                 document.getElementById('resenas-lista').innerHTML =
                     `<p style="text-align:center; color:#e74c3c; padding:40px 0;">
@@ -374,9 +422,9 @@
             return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
         }
 
-        function renderLista(lista) {
+        function renderLista(items) {
             const contenedor = document.getElementById('resenas-lista');
-            if (lista.length === 0) {
+            if (items.length === 0) {
                 contenedor.innerHTML = `
                     <div class="empty-state">
                         <i class="fa-solid fa-pen-to-square"></i>
@@ -395,21 +443,27 @@
                 'estafador': { icon: 'fa-skull',       label: 'Estafador', color: '#c0392b', bg: '#fdecea' },
             };
             const REC_MAP = {
-                'si':      { icon: 'fa-thumbs-up',    label: 'Lo recomiendo',    color: '#2e7d32', bg: '#e8f5e9' },
+                'si':      { icon: 'fa-thumbs-up',     label: 'Lo recomiendo',    color: '#2e7d32', bg: '#e8f5e9' },
                 'no':      { icon: 'fa-thumbs-down',   label: 'No lo recomiendo', color: '#c0392b', bg: '#fdecea' },
                 'tal-vez': { icon: 'fa-scale-balanced', label: 'Tal vez',         color: '#c46a09', bg: '#fff3e0' },
             };
 
-            contenedor.innerHTML = `<div class="resenas-lista">${lista.map((r, i) => {
-                const provincia = r.provincia || r.zona || '';
-                const ubicacion = [r.barrio, provincia].filter(Boolean).join(' — ');
-                const detalleDir = [
-                    r.direccion,
-                    r.tipoVivienda === 'edificio' && r.piso ? `Piso ${r.piso}${r.depto ? ' ' + r.depto : ''}` : null
-                ].filter(Boolean).join(' · ');
+            contenedor.innerHTML = `<div class="resenas-lista">${items.map(({ review: r, property: p }, i) => {
+                const provincia = p?.provincia || '';
+                const partido   = p?.partido   || '';
+                const barrio    = p?.barrio    || '';
+                const ubicacion = [barrio, partido, provincia].filter(Boolean).join(' — ');
+                // Dirección privada completa desde Property (fuente de verdad)
+                const callePrivada = p ? [
+                    p.calleDisplay || '',
+                    p.alturaExacta || ''
+                ].filter(Boolean).join(' ') : '';
+                const pisoDepto = p && (p.piso || p.depto)
+                    ? [p.piso ? `Piso ${p.piso}` : '', p.depto || ''].filter(Boolean).join(' ')
+                    : '';
+                const detalleDir = [callePrivada, pisoDepto].filter(Boolean).join(' · ');
                 const tags = [
-                    r.partido ? `<span class="tag">${r.partido}</span>` : '',
-                    r.codigoPostal ? `<span class="tag">CP ${r.codigoPostal}</span>` : '',
+                    p?.codigoPostal ? `<span class="tag">CP ${p.codigoPostal}</span>` : '',
                     r.porInmobiliaria && r.nombreInmobiliaria ? `<span class="tag tag-inmob">${r.nombreInmobiliaria}</span>` : '',
                 ].filter(Boolean).join('');
                 const tratoBadge = r.trato && TRATO_MAP[r.trato] ? (() => {
@@ -420,16 +474,17 @@
                     const rc = REC_MAP[r.recomendaria];
                     return `<span style="display:inline-flex; align-items:center; gap:4px; background:${rc.bg}; color:${rc.color}; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid ${rc.icon}"></i> ${rc.label}</span>`;
                 })() : '';
+                const verLink = p ? `onclick="location.href='propiedad.html?id=${p.id}'" style="cursor:pointer;"` : '';
                 return `
                 <div class="resena-item">
-                    <div class="resena-foto" id="foto-${i}">
+                    <div class="resena-foto" id="foto-${i}" ${verLink}>
                         <i class="fa-solid fa-image"></i>
                     </div>
-                    <div class="resena-body">
+                    <div class="resena-body" ${verLink}>
                         <div class="resena-titulo">${r.titulo}</div>
                         <div class="resena-ubicacion">
                             <i class="fa-solid fa-map-pin" style="color:#e07b10;"></i>
-                            ${ubicacion}
+                            ${ubicacion || 'Ubicación no disponible'}
                         </div>
                         ${detalleDir ? `<div style="font-size:0.8rem; color:#6c757d; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${detalleDir}</div>` : ''}
                         ${tags ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">${tags}</div>` : ''}
@@ -447,7 +502,7 @@
             }).join('')}</div>`;
 
             // Cargar imágenes
-            lista.forEach(async (r, i) => {
+            items.forEach(async ({ review: r }, i) => {
                 if (r.imagenes && r.imagenes[0]) {
                     try {
                         const { url } = await getUrl({ path: r.imagenes[0] });
@@ -477,7 +532,13 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Borrando...';
             try {
-                await client.models.Resena.delete({ id: idABorrar });
+                const item = misItems.find(it => it.review.id === idABorrar);
+                await client.models.Review.delete({ id: idABorrar });
+                // Actualizar stats de la Property si está disponible
+                if (item?.property) {
+                    const stats = actualizarStatsAlBorrar(item.property, item.review.puntaje, item.review.recomendaria);
+                    await client.models.Property.update({ id: item.property.id, ...stats });
+                }
                 cerrarModal();
                 cargarMisResenas();
             } catch (err) {

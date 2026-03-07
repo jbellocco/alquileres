@@ -388,6 +388,10 @@
         import { uploadData } from 'https://esm.sh/aws-amplify@6/storage';
         import { awsConfig } from './aws-config.js';
         import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+        import {
+            parsearDireccion, normalizarCalle, calcularAlturaPublica,
+            generarFingerprint, construirDisplayAddress, actualizarStatsConNuevaResena
+        } from './property-utils.js';
 
         Amplify.configure(awsConfig);
         const client = generateClient();
@@ -472,7 +476,56 @@
             btn.disabled = true;
 
             try {
-                // Subir imágenes a S3
+                // 1. Normalizar dirección y generar fingerprint
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando propiedad...';
+                const { calle, numero: alturaExacta } = parsearDireccion(direccion);
+                const calleNorm   = normalizarCalle(calle);
+                const altPub      = calcularAlturaPublica(alturaExacta);
+                const fingerprint = generarFingerprint({
+                    provincia, partido, barrio, calleNorm,
+                    alturaExacta, tipoVivienda, piso, depto,
+                });
+
+                // 2. Buscar o crear Property
+                const { data: propResults } = await client.models.Property.list({
+                    filter: { propertyFingerprint: { eq: fingerprint } }
+                });
+                let property = propResults && propResults[0];
+
+                if (!property) {
+                    const calleDisplay = calle
+                        ? calle.replace(/\b\w/g, c => c.toUpperCase())
+                        : '';
+                    const displayAddress = construirDisplayAddress({
+                        calleDisplay,
+                        alturaPublica: altPub,
+                        barrio, partido, provincia,
+                    });
+                    const { data: nueva } = await client.models.Property.create({
+                        propertyFingerprint: fingerprint,
+                        provincia,
+                        partido:            partido || null,
+                        barrio,
+                        codigoPostal:       codigoPostal || null,
+                        calleNormalizada:   calleNorm,
+                        calleDisplay,
+                        alturaPublica:      altPub,
+                        displayAddress,
+                        tipoVivienda:       tipoVivienda || null,
+                        porInmobiliaria:    esPorInmob,
+                        nombreInmobiliaria: esPorInmob ? nombreInmobiliaria : null,
+                        alturaExacta:       alturaExacta || null,
+                        piso:               piso || null,
+                        depto:              depto || null,
+                        totalResenas:       0,
+                        puntajePromedio:    0,
+                        totalRecomiendan:   0,
+                        totalNoRecomiendan: 0,
+                    });
+                    property = nueva;
+                }
+
+                // 3. Subir imágenes a S3
                 const fileInput = document.getElementById('imagenes');
                 const files = Array.from(fileInput.files).slice(0, 5);
                 const imagenes = [];
@@ -492,28 +545,27 @@
 
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...';
 
-                await client.models.Resena.create({
-                    zona: provincia,        // backward compat
-                    provincia,
-                    partido:            partido || null,
-                    barrio,
-                    codigoPostal:       codigoPostal || null,
-                    direccion,
-                    tipoVivienda,
-                    piso,
-                    depto,
-                    porInmobiliaria:    esPorInmob,
-                    nombreInmobiliaria,
+                // 4. Crear Review
+                await client.models.Review.create({
+                    propertyId:      property.id,
+                    autorId:         usuarioActual.userId,
                     titulo,
                     texto,
-                    puntaje: parseInt(puntaje),
+                    puntaje:         parseInt(puntaje),
                     trato,
-                    problemas: problemas.length > 0 ? problemas : null,
+                    problemas:       problemas.length > 0 ? problemas : null,
                     recomendaria,
-                    autorId: usuarioActual.userId,
-                    autorNombre: usuarioActual.signInDetails?.loginId || '',
-                    imagenes: imagenes.length > 0 ? imagenes : null,
+                    estado:          'activo',
+                    imagenes:        imagenes.length > 0 ? imagenes : null,
+                    // Inmobiliaria al momento de la reseña
+                    porInmobiliaria:    esPorInmob,
+                    nombreInmobiliaria: esPorInmob ? nombreInmobiliaria : null,
                 });
+
+                // 5. Actualizar stats de Property (solo si Review fue creada exitosamente)
+                const nuevosStats = actualizarStatsConNuevaResena(property, parseInt(puntaje), recomendaria);
+                await client.models.Property.update({ id: property.id, ...nuevosStats });
+
                 mostrarExito();
             } catch (err) {
                 errorDiv.textContent = 'Error al publicar: ' + (err.message || 'intentá de nuevo');
