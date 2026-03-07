@@ -49,6 +49,9 @@ export const awsConfig = {
             depto:              { name: "depto",              isArray: false, type: "String",      isRequired: false, attributes: [] },
             porInmobiliaria:    { name: "porInmobiliaria",    isArray: false, type: "Boolean",     isRequired: false, attributes: [] },
             nombreInmobiliaria: { name: "nombreInmobiliaria", isArray: false, type: "String",      isRequired: false, attributes: [] },
+            trato:              { name: "trato",              isArray: false, type: "String",      isRequired: false, attributes: [] },
+            problemas:          { name: "problemas",          isArray: true,  type: "String",      isRequired: false, attributes: [], isArrayNullable: true },
+            recomendaria:       { name: "recomendaria",       isArray: false, type: "String",      isRequired: false, attributes: [] },
             createdAt: { name: "createdAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true },
             updatedAt: { name: "updatedAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true }
           },

@@ -189,6 +189,81 @@
                     </div>
                 </fieldset>
 
+                <!-- DATOS RÁPIDOS -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-bolt"></i> Datos rápidos <span style="font-size:0.78rem; font-weight:400; color:#6c757d;">(opcional)</span></legend>
+
+                    <div class="input-group">
+                        <label>¿Cómo era el trato?</label>
+                        <div class="quick-options">
+                            <label class="quick-option">
+                                <input type="radio" name="trato" value="muy-bueno">
+                                <i class="fa-solid fa-face-smile"></i> Muy bueno
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="trato" value="normal">
+                                <i class="fa-solid fa-face-meh"></i> Normal
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="trato" value="dificil">
+                                <i class="fa-solid fa-face-frown"></i> Difícil
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="trato" value="muy malo">
+                                <i class="fa-solid fa-skull"></i> Muy malo
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>¿Qué problemas tuviste?</label>
+                        <div class="quick-chips">
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="aumentos">
+                                Aumentos injustificados
+                            </label>
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="arreglos">
+                                No arregla cosas
+                            </label>
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="expensas">
+                                Expensas altas
+                            </label>
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="ruidos">
+                                Ruidos molestos
+                            </label>
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="humedad">
+                                Humedad
+                            </label>
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="ninguno">
+                                Ninguno
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>¿Volvería a alquilar ahí?</label>
+                        <div class="quick-options">
+                            <label class="quick-option">
+                                <input type="radio" name="recomendaria" value="si">
+                                <i class="fa-solid fa-thumbs-up"></i> Sí
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="recomendaria" value="no">
+                                <i class="fa-solid fa-thumbs-down"></i> No
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="recomendaria" value="tal-vez">
+                                <i class="fa-solid fa-scale-balanced"></i> Tal vez
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+
                 <!-- IMÁGENES -->
                 <fieldset>
                     <legend><i class="fa-solid fa-image"></i> Imágenes</legend>
@@ -383,6 +458,9 @@
             const titulo      = document.getElementById('titulo').value.trim();
             const texto       = document.getElementById('resena').value.trim();
             const puntaje     = document.querySelector('input[name="puntaje"]:checked')?.value;
+            const trato       = document.querySelector('input[name="trato"]:checked')?.value || null;
+            const problemas   = Array.from(document.querySelectorAll('input[name="problemas"]:checked')).map(el => el.value);
+            const recomendaria = document.querySelector('input[name="recomendaria"]:checked')?.value || null;
 
             if (!provincia || !barrio || !direccion || !titulo || !texto || !puntaje) {
                 errorDiv.textContent = 'Por favor completá: provincia, barrio, dirección, título, reseña y puntaje.';
@@ -429,6 +507,9 @@
                     titulo,
                     texto,
                     puntaje: parseInt(puntaje),
+                    trato,
+                    problemas: problemas.length > 0 ? problemas : null,
+                    recomendaria,
                     autorId: usuarioActual.userId,
                     autorNombre: usuarioActual.signInDetails?.loginId || '',
                     imagenes: imagenes.length > 0 ? imagenes : null,

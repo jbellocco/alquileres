@@ -54,6 +54,13 @@
                 <button class="filtro-zona" data-zona="Córdoba"><i class="fa-solid fa-location-dot"></i> Córdoba</button>
                 <button class="filtro-zona" data-zona="Santa Fe"><i class="fa-solid fa-location-dot"></i> Santa Fe</button>
             </div>
+            <div style="justify-content:flex-end;">
+                <select id="orden" style="border:1.5px solid #e9ecef; border-radius:8px; padding:8px 12px; font-family:'Inter',sans-serif; font-size:0.875rem; color:#2c3e50; background:#fff; cursor:pointer;">
+                    <option value="recientes">Más recientes</option>
+                    <option value="mejor">Mejor valoradas</option>
+                    <option value="peor">Peor valoradas</option>
+                </select>
+            </div>
         </section>
 
         <section id="resenas-grid">
@@ -104,20 +111,44 @@
             return dir.replace(/\d{3,}/, n => Math.floor(parseInt(n) / 100) * 100);
         }
 
+        const RECOMENDARIA_BADGE = {
+            'si':      { icon: 'fa-thumbs-up',    label: 'Lo recomiendo',    color: '#2e7d32', bg: '#e8f5e9' },
+            'no':      { icon: 'fa-thumbs-down',   label: 'No lo recomiendo', color: '#c0392b', bg: '#fdecea' },
+            'tal-vez': { icon: 'fa-scale-balanced', label: 'Tal vez',         color: '#c46a09', bg: '#fff3e0' },
+        };
+
+        function ordenarLista(lista) {
+            const orden = document.getElementById('orden').value;
+            const copia = [...lista];
+            if (orden === 'mejor') copia.sort((a, b) => b.puntaje - a.puntaje);
+            else if (orden === 'peor') copia.sort((a, b) => a.puntaje - b.puntaje);
+            else copia.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return copia;
+        }
+
         function renderResenas(lista) {
             const grid = document.getElementById('resenas-grid');
             if (lista.length === 0) {
                 grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron reseñas</p>';
                 return;
             }
-            grid.innerHTML = lista.map((r, i) => {
+            const ordenada = ordenarLista(lista);
+            grid.innerHTML = ordenada.map((r, i) => {
                 const dirAprox = aproximarDireccion(r.direccion);
                 const ubicacion = [r.barrio, r.provincia || r.zona].filter(Boolean).join(' — ');
                 const inmob = r.porInmobiliaria && r.nombreInmobiliaria
                     ? `<span style="font-size:0.78rem; background:#fff3e0; color:#c46a09; padding:2px 8px; border-radius:999px; font-weight:500;">${r.nombreInmobiliaria}</span>`
                     : '';
+                const recBadge = r.recomendaria && RECOMENDARIA_BADGE[r.recomendaria] ? (() => {
+                    const b = RECOMENDARIA_BADGE[r.recomendaria];
+                    return `<p style="display:flex; align-items:center; gap:5px;">
+                        <span style="display:inline-flex; align-items:center; gap:5px; background:${b.bg}; color:${b.color}; padding:3px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;">
+                            <i class="fa-solid ${b.icon}"></i> ${b.label}
+                        </span>
+                    </p>`;
+                })() : '';
                 return `
-                <article>
+                <article style="cursor:pointer;" onclick="location.href='resena-detalle.html?id=${r.id}'">
                     <div id="img-wrap-${i}" style="background:#f8f9fa; height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                         <i class="fa-solid fa-image" style="font-size:2rem; color:#ced4da;"></i>
                     </div>
@@ -127,12 +158,13 @@
                         <p class="card-stars">${estrellas(r.puntaje)} ${r.puntaje}/5</p>
                         <p><strong style="color:#2c3e50;">${r.titulo}</strong></p>
                         <p>${r.texto}</p>
+                        ${recBadge}
                     </div>
                 </article>`;
             }).join('');
 
             // Cargar URLs de imágenes de forma asíncrona
-            lista.forEach(async (r, i) => {
+            ordenada.forEach(async (r, i) => {
                 if (r.imagenes && r.imagenes[0]) {
                     try {
                         const { url } = await getUrl({ path: r.imagenes[0] });
@@ -178,6 +210,11 @@
                 r.titulo.toLowerCase().includes(q)
             );
             renderResenas(filtradas);
+        });
+
+        // Orden
+        document.getElementById('orden').addEventListener('change', () => {
+            renderResenas(todasLasResenas);
         });
 
         // ===== HEADER AUTH =====

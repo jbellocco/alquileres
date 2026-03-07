@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reseña - Reseñas de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .detalle-wrap {
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .btn-volver {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 20px;
+            text-decoration: none;
+        }
+
+        .btn-volver:hover { color: var(--primary-dark); }
+
+        .detalle-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .detalle-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .detalle-img-placeholder {
+            width: 100%;
+            height: 220px;
+            background: var(--neutral-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neutral-200);
+            font-size: 3rem;
+        }
+
+        .detalle-body {
+            padding: 28px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .detalle-ubicacion {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .detalle-ubicacion i { color: var(--primary); }
+
+        .detalle-dir {
+            font-size: 0.85rem;
+            color: var(--neutral-500);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detalle-stars {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--star);
+            font-size: 1.1rem;
+        }
+
+        .detalle-stars span {
+            font-size: 0.9rem;
+            color: var(--neutral-500);
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .detalle-titulo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .detalle-texto {
+            font-size: 0.95rem;
+            color: var(--neutral-500);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .detalle-divider {
+            border: none;
+            border-top: 1px solid var(--neutral-200);
+        }
+
+        .detalle-rapidos {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rapidos-titulo {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .rapidos-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .rapidos-label {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 500;
+            min-width: 140px;
+        }
+
+        .badge-trato {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-trato.muy-bueno  { background: #e8f5e9; color: #2e7d32; }
+        .badge-trato.normal     { background: var(--neutral-100); color: var(--accent); }
+        .badge-trato.dificil    { background: #fff3e0; color: #c46a09; }
+        .badge-trato.estafador  { background: #fdecea; color: #c0392b; }
+
+        .badge-recomendaria {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-recomendaria.si       { background: #e8f5e9; color: #2e7d32; }
+        .badge-recomendaria.no       { background: #fdecea; color: #c0392b; }
+        .badge-recomendaria.tal-vez  { background: #fff3e0; color: #c46a09; }
+
+        .problema-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: var(--neutral-100);
+            color: var(--accent);
+            border: 1px solid var(--neutral-200);
+        }
+
+        .detalle-meta {
+            font-size: 0.8rem;
+            color: var(--neutral-500);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .inmob-tag {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 600px) {
+            .detalle-body { padding: 20px 18px; gap: 14px; }
+            .detalle-img { height: 200px; }
+            .rapidos-label { min-width: unset; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><a href="index.html" style="color:inherit; text-decoration:none;"><i class="fa-solid fa-house"></i> Reseñas de Alquileres</a></h1>
+        <div id="header-auth">
+            <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+            <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+        </div>
+        <div id="header-user" style="display:none; position:relative; align-items:center; gap:10px;">
+            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+            </button>
+            <span id="header-nombre" class="header-nombre"></span>
+            <div id="user-dropdown" class="user-dropdown">
+                <span id="dropdown-nombre" class="dropdown-nombre"></span>
+                <hr class="dropdown-divider">
+                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="detalle-wrap">
+        <a href="index.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+
+        <div id="detalle-contenido">
+            <p style="text-align:center; color:#6c757d; padding:60px 0;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando reseña...
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
+        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
+    </footer>
+
+    <script type="module">
+        import { Amplify } from 'https://esm.sh/aws-amplify@6';
+        import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { awsConfig } from './aws-config.js';
+        import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+
+        Amplify.configure(awsConfig);
+        const clientIAM  = generateClient({ authMode: 'iam' });
+        const clientAuth = generateClient();
+
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+
+        function estrellas(puntaje) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += i <= puntaje
+                    ? '<i class="fa-solid fa-star"></i>'
+                    : '<i class="fa-regular fa-star"></i>';
+            }
+            return html;
+        }
+
+        function formatFecha(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        const TRATO_LABELS = {
+            'muy-bueno': { icon: 'fa-face-smile', label: 'Muy bueno', cls: 'muy-bueno' },
+            'normal':    { icon: 'fa-face-meh',   label: 'Normal',    cls: 'normal'    },
+            'dificil':   { icon: 'fa-face-frown', label: 'Difícil',   cls: 'dificil'   },
+            'estafador': { icon: 'fa-skull',       label: 'Estafador', cls: 'estafador' },
+        };
+
+        const PROBLEMA_LABELS = {
+            'aumentos': 'Aumentos injustificados',
+            'arreglos': 'No arregla cosas',
+            'expensas': 'Expensas altas',
+            'ruidos':   'Ruidos molestos',
+            'humedad':  'Humedad',
+            'ninguno':  'Sin problemas',
+        };
+
+        const RECOMENDARIA_CONFIG = {
+            'si':      { icon: 'fa-thumbs-up',   label: 'Lo recomiendo',    cls: 'si'      },
+            'no':      { icon: 'fa-thumbs-down',  label: 'No lo recomiendo', cls: 'no'      },
+            'tal-vez': { icon: 'fa-scale-balanced', label: 'Tal vez',        cls: 'tal-vez' },
+        };
+
+        function aproximarDireccion(dir) {
+            if (!dir) return null;
+            return dir.replace(/\d{3,}/, n => Math.floor(parseInt(n) / 100) * 100);
+        }
+
+        async function cargarDetalle() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) {
+                document.getElementById('detalle-contenido').innerHTML =
+                    '<p style="text-align:center; color:#e74c3c; padding:60px 0;"><i class="fa-solid fa-triangle-exclamation"></i> Reseña no encontrada.</p>';
+                return;
+            }
+
+            try {
+                const user = await getUsuarioActual();
+                const client = user ? clientAuth : clientIAM;
+                const { data: r } = await client.models.Resena.get({ id });
+
+                if (!r) {
+                    document.getElementById('detalle-contenido').innerHTML =
+                        '<p style="text-align:center; color:#e74c3c; padding:60px 0;"><i class="fa-solid fa-triangle-exclamation"></i> Reseña no encontrada.</p>';
+                    return;
+                }
+
+                document.title = `${r.titulo} - Reseñas de Alquileres`;
+
+                const provincia = r.provincia || r.zona || '';
+                const ubicacion = [r.barrio, provincia].filter(Boolean).join(' — ');
+                const dirAprox  = aproximarDireccion(r.direccion);
+
+                const inmobTag = r.porInmobiliaria && r.nombreInmobiliaria
+                    ? `<span class="inmob-tag"><i class="fa-solid fa-building"></i> ${r.nombreInmobiliaria}</span>`
+                    : '';
+
+                // Datos rápidos
+                const tratoHTML = r.trato && TRATO_LABELS[r.trato] ? (() => {
+                    const t = TRATO_LABELS[r.trato];
+                    return `<div class="rapidos-row">
+                        <span class="rapidos-label"><i class="fa-solid fa-handshake" style="color:var(--primary);"></i> Trato del propietario</span>
+                        <span class="badge-trato ${t.cls}"><i class="fa-solid ${t.icon}"></i> ${t.label}</span>
+                    </div>`;
+                })() : '';
+
+                const problemasHTML = r.problemas && r.problemas.length > 0 ? `<div class="rapidos-row">
+                    <span class="rapidos-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--primary);"></i> Problemas</span>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        ${r.problemas.map(p => `<span class="problema-chip">${PROBLEMA_LABELS[p] || p}</span>`).join('')}
+                    </div>
+                </div>` : '';
+
+                const recomendariaHTML = r.recomendaria && RECOMENDARIA_CONFIG[r.recomendaria] ? (() => {
+                    const rc = RECOMENDARIA_CONFIG[r.recomendaria];
+                    return `<div class="rapidos-row">
+                        <span class="rapidos-label"><i class="fa-solid fa-star" style="color:var(--primary);"></i> ¿Volvería a alquilar?</span>
+                        <span class="badge-recomendaria ${rc.cls}"><i class="fa-solid ${rc.icon}"></i> ${rc.label}</span>
+                    </div>`;
+                })() : '';
+
+                const hayRapidos = tratoHTML || problemasHTML || recomendariaHTML;
+
+                document.getElementById('detalle-contenido').innerHTML = `
+                    <div class="detalle-card">
+                        <div id="detalle-img-wrap" class="detalle-img-placeholder">
+                            <i class="fa-solid fa-image"></i>
+                        </div>
+                        <div class="detalle-body">
+                            <div>
+                                <div class="detalle-ubicacion">
+                                    <i class="fa-solid fa-map-pin"></i> ${ubicacion}
+                                </div>
+                                ${dirAprox ? `<div class="detalle-dir"><i class="fa-solid fa-road" style="color:var(--primary); font-size:0.75rem;"></i> ${dirAprox} ${inmobTag}</div>` : (inmobTag ? `<div class="detalle-dir">${inmobTag}</div>` : '')}
+                            </div>
+
+                            <div class="detalle-stars">
+                                ${estrellas(r.puntaje)}
+                                <span>${r.puntaje}/5</span>
+                            </div>
+
+                            <div class="detalle-titulo">${r.titulo}</div>
+                            <div class="detalle-texto">${r.texto}</div>
+
+                            ${hayRapidos ? `
+                            <hr class="detalle-divider">
+                            <div class="detalle-rapidos">
+                                <div class="rapidos-titulo">Datos rápidos</div>
+                                ${tratoHTML}
+                                ${problemasHTML}
+                                ${recomendariaHTML}
+                            </div>` : ''}
+
+                            <hr class="detalle-divider">
+                            <div class="detalle-meta">
+                                <i class="fa-regular fa-calendar"></i> ${formatFecha(r.createdAt)}
+                            </div>
+                        </div>
+                    </div>`;
+
+                // Cargar imagen
+                if (r.imagenes && r.imagenes[0]) {
+                    try {
+                        const { url } = await getUrl({ path: r.imagenes[0] });
+                        document.getElementById('detalle-img-wrap').innerHTML =
+                            `<img src="${url}" alt="foto" class="detalle-img">`;
+                    } catch (e) {}
+                }
+
+            } catch (err) {
+                document.getElementById('detalle-contenido').innerHTML =
+                    `<p style="text-align:center; color:#e74c3c; padding:60px 0;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar la reseña.<br>
+                        <small style="font-size:0.8rem; color:#aaa;">${err.message || err}</small>
+                    </p>`;
+            }
+        }
+
+        // ===== HEADER AUTH =====
+        async function inicializarHeader() {
+            const user = await getUsuarioActual();
+            cargarDetalle();
+            if (!user) return;
+
+            document.getElementById('header-auth').style.display = 'none';
+            document.getElementById('header-user').style.display = 'flex';
+
+            try {
+                const { data: perfiles } = await clientAuth.models.UserProfile.list({
+                    filter: { userId: { eq: user.userId } }
+                });
+                const perfil = perfiles && perfiles[0];
+                if (perfil) {
+                    const nombre = capitalizar(perfil.nombre);
+                    const apellido = capitalizar(perfil.apellido);
+                    document.getElementById('header-nombre').textContent = nombre;
+                    document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
+                    if (perfil.fotoPerfil) {
+                        try {
+                            const { url } = await getUrl({ path: perfil.fotoPerfil });
+                            const img = document.getElementById('avatar-img');
+                            img.src = url.toString();
+                            img.style.display = 'block';
+                            document.getElementById('avatar-icon').style.display = 'none';
+                        } catch (e) {}
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function toggleDropdown() {
+            document.getElementById('user-dropdown').classList.toggle('open');
+        }
+        window.toggleDropdown = toggleDropdown;
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('header-user').contains(e.target)) {
+                document.getElementById('user-dropdown').classList.remove('open');
+            }
+        });
+
+        async function cerrarSesion() { await logout(); }
+        window.cerrarSesion = cerrarSesion;
+
+        inicializarHeader();
+    </script>
+
+</body>
+</html>

@@ -388,6 +388,18 @@
                 return;
             }
 
+            const TRATO_MAP = {
+                'muy-bueno': { icon: 'fa-face-smile', label: 'Muy bueno', color: '#2e7d32', bg: '#e8f5e9' },
+                'normal':    { icon: 'fa-face-meh',   label: 'Normal',    color: '#2c3e50', bg: '#f8f9fa' },
+                'dificil':   { icon: 'fa-face-frown', label: 'Difícil',   color: '#c46a09', bg: '#fff3e0' },
+                'estafador': { icon: 'fa-skull',       label: 'Estafador', color: '#c0392b', bg: '#fdecea' },
+            };
+            const REC_MAP = {
+                'si':      { icon: 'fa-thumbs-up',    label: 'Lo recomiendo',    color: '#2e7d32', bg: '#e8f5e9' },
+                'no':      { icon: 'fa-thumbs-down',   label: 'No lo recomiendo', color: '#c0392b', bg: '#fdecea' },
+                'tal-vez': { icon: 'fa-scale-balanced', label: 'Tal vez',         color: '#c46a09', bg: '#fff3e0' },
+            };
+
             contenedor.innerHTML = `<div class="resenas-lista">${lista.map((r, i) => {
                 const provincia = r.provincia || r.zona || '';
                 const ubicacion = [r.barrio, provincia].filter(Boolean).join(' — ');
@@ -400,6 +412,14 @@
                     r.codigoPostal ? `<span class="tag">CP ${r.codigoPostal}</span>` : '',
                     r.porInmobiliaria && r.nombreInmobiliaria ? `<span class="tag tag-inmob">${r.nombreInmobiliaria}</span>` : '',
                 ].filter(Boolean).join('');
+                const tratoBadge = r.trato && TRATO_MAP[r.trato] ? (() => {
+                    const t = TRATO_MAP[r.trato];
+                    return `<span style="display:inline-flex; align-items:center; gap:4px; background:${t.bg}; color:${t.color}; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid ${t.icon}"></i> ${t.label}</span>`;
+                })() : '';
+                const recBadge = r.recomendaria && REC_MAP[r.recomendaria] ? (() => {
+                    const rc = REC_MAP[r.recomendaria];
+                    return `<span style="display:inline-flex; align-items:center; gap:4px; background:${rc.bg}; color:${rc.color}; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid ${rc.icon}"></i> ${rc.label}</span>`;
+                })() : '';
                 return `
                 <div class="resena-item">
                     <div class="resena-foto" id="foto-${i}">
@@ -414,6 +434,7 @@
                         ${detalleDir ? `<div style="font-size:0.8rem; color:#6c757d; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${detalleDir}</div>` : ''}
                         ${tags ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">${tags}</div>` : ''}
                         <div class="resena-estrellas">${estrellas(r.puntaje)} ${r.puntaje}/5</div>
+                        ${tratoBadge || recBadge ? `<div style="display:flex; gap:6px; flex-wrap:wrap;">${tratoBadge}${recBadge}</div>` : ''}
                         <div class="resena-texto">${r.texto}</div>
                         <div class="resena-fecha"><i class="fa-regular fa-calendar"></i> ${formatFecha(r.createdAt)}</div>
                     </div>
