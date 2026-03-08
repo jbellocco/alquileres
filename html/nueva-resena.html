@@ -494,8 +494,7 @@
                 const altPub      = calcularAlturaPublica(alturaExacta);
                 const calleDisplay = calle.replace(/\b\w/g, c => c.toUpperCase());
                 const fingerprint = generarFingerprint({
-                    provincia, partido, barrio, calleNorm,
-                    alturaExacta, tipoVivienda, piso, depto,
+                    provincia, calleNorm, alturaExacta, tipoVivienda, piso, depto,
                 });
 
                 // 2. Buscar o crear Property

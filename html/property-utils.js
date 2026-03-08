@@ -1,6 +1,7 @@
 // ===== UTILIDADES DE NORMALIZACIÓN Y FINGERPRINT =====
 // El fingerprint identifica un inmueble de forma única:
-// provincia:partido:barrio:calleNorm:alturaExacta:piso:depto
+// provincia:calleNorm:alturaExacta:tipoVivienda:piso:depto
+// partido/barrio/codigoPostal son metadata descriptiva, NO forman parte de la identidad
 // La inmobiliaria NO forma parte del fingerprint (es informativa, puede cambiar)
 
 export function normalizarTexto(str) {
@@ -40,16 +41,16 @@ export function calcularAlturaPublica(numero) {
     return String(Math.floor(n / 100) * 100);
 }
 
-export function generarFingerprint({ provincia, partido, barrio, calleNorm, alturaExacta, tipoVivienda, piso, depto }) {
-    // fingerprint = provincia:partido:barrio:calleNorm:alturaExacta:piso:depto
+export function generarFingerprint({ provincia, calleNorm, alturaExacta, tipoVivienda, piso, depto }) {
+    // fingerprint = provincia:calleNorm:alturaExacta:tipoVivienda:piso:depto
+    // partido/barrio/codigoPostal son metadata descriptiva, NO forman parte de la identidad
     // piso y depto solo se incluyen si tipoVivienda === 'edificio'
     const esEdificio = tipoVivienda === 'edificio';
     const parts = [
         normalizarTexto(provincia),
-        normalizarTexto(partido),   // vacío para CABA → queda como ''
-        normalizarTexto(barrio),
         calleNorm,
         (alturaExacta || '').trim(),
+        tipoVivienda || '',
         esEdificio ? normalizarTexto(piso || '') : '',
         esEdificio ? normalizarTexto(depto || '') : '',
     ];

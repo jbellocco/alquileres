@@ -144,8 +144,7 @@
                 const calleNorm   = normalizarCalle(calle);
                 const altPub      = calcularAlturaPublica(alturaExacta);
                 const fingerprint = generarFingerprint({
-                    provincia, partido, barrio, calleNorm,
-                    alturaExacta, tipoVivienda, piso, depto,
+                    provincia, calleNorm, alturaExacta, tipoVivienda, piso, depto,
                 });
 
                 // Buscar property en cache o en DB

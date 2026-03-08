@@ -6,7 +6,8 @@ const schema = a.schema({
   Property: a
     .model({
       // Deduplicación
-      // fingerprint = provincia:partido:barrio:calleNorm:alturaExacta:piso:depto
+      // fingerprint = provincia:calleNorm:alturaExacta:tipoVivienda:piso:depto
+      // partido/barrio/codigoPostal son metadata descriptiva, NO forman parte de la identidad
       // La inmobiliaria NO forma parte del fingerprint (es informativa y puede cambiar)
       propertyFingerprint: a.string().required(),
 
