@@ -81,9 +81,9 @@
                     </div>
 
                     <div class="input-row-2">
-                        <div class="input-group">
+                        <div class="input-group" id="barrio-group" style="display:none;">
                             <label for="barrio">Barrio</label>
-                            <input type="text" id="barrio" placeholder="Ej: Palermo, Alberdi...">
+                            <input type="text" id="barrio" placeholder="Ej: Palermo, Villa Crespo...">
                         </div>
 
                         <div class="input-group">
@@ -92,12 +92,18 @@
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label for="direccion">
-                            Dirección (calle y número)
-                            <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es pública exacta</span>
-                        </label>
-                        <input type="text" id="direccion" placeholder="Ej: Av. Corrientes 6156">
+                    <div class="input-row" style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end;">
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label for="calle">
+                                Calle
+                                <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es pública exacta</span>
+                            </label>
+                            <input type="text" id="calle" placeholder="Ej: Av. Corrientes">
+                        </div>
+                        <div class="input-group" style="margin-bottom:0; width:110px;">
+                            <label for="numeroDireccion">Número</label>
+                            <input type="text" id="numeroDireccion" placeholder="Ej: 6156" maxlength="6">
+                        </div>
                     </div>
 
                     <!-- Tipo de vivienda -->
@@ -316,12 +322,16 @@
     </footer>
 
     <script>
-        // Ocultar partido si es CABA
         function onJurisdiccionChange() {
             const esCABA = document.getElementById('provincia').value === 'CABA';
-            const grupo = document.getElementById('partido-group');
-            grupo.style.display = esCABA ? 'none' : 'block';
+            // Partido: solo para fuera de CABA
+            const grupoPartido = document.getElementById('partido-group');
+            grupoPartido.style.display = esCABA ? 'none' : 'block';
             if (esCABA) document.getElementById('partido').value = '';
+            // Barrio: solo para CABA
+            const grupoBarrio = document.getElementById('barrio-group');
+            grupoBarrio.style.display = esCABA ? 'block' : 'none';
+            if (!esCABA) document.getElementById('barrio').value = '';
         }
 
         // Toggle tipo de vivienda
@@ -453,7 +463,8 @@
             const partido     = document.getElementById('partido').value.trim();
             const barrio      = document.getElementById('barrio').value.trim();
             const codigoPostal = document.getElementById('codigoPostal').value.trim();
-            const direccion   = document.getElementById('direccion').value.trim();
+            const calle        = document.getElementById('calle').value.trim();
+            const alturaExacta = document.getElementById('numeroDireccion').value.trim();
             const tipoVivienda = document.querySelector('input[name="tipoVivienda"]:checked')?.value;
             const piso        = tipoVivienda === 'edificio' ? document.getElementById('piso').value.trim() : null;
             const depto       = tipoVivienda === 'edificio' ? document.getElementById('depto').value.trim() : null;
@@ -466,8 +477,9 @@
             const problemas   = Array.from(document.querySelectorAll('input[name="problemas"]:checked')).map(el => el.value);
             const recomendaria = document.querySelector('input[name="recomendaria"]:checked')?.value || null;
 
-            if (!provincia || !barrio || !direccion || !titulo || !texto || !puntaje) {
-                errorDiv.textContent = 'Por favor completá: provincia, barrio, dirección, título, reseña y puntaje.';
+            const esCABA = provincia === 'CABA';
+            if (!provincia || (esCABA && !barrio) || !calle || !titulo || !texto || !puntaje) {
+                errorDiv.textContent = 'Por favor completá: provincia' + (esCABA ? ', barrio' : '') + ', calle, título, reseña y puntaje.';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -478,9 +490,9 @@
             try {
                 // 1. Normalizar dirección y generar fingerprint
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando propiedad...';
-                const { calle, numero: alturaExacta } = parsearDireccion(direccion);
                 const calleNorm   = normalizarCalle(calle);
                 const altPub      = calcularAlturaPublica(alturaExacta);
+                const calleDisplay = calle.replace(/\b\w/g, c => c.toUpperCase());
                 const fingerprint = generarFingerprint({
                     provincia, partido, barrio, calleNorm,
                     alturaExacta, tipoVivienda, piso, depto,
@@ -493,9 +505,6 @@
                 let property = propResults && propResults[0];
 
                 if (!property) {
-                    const calleDisplay = calle
-                        ? calle.replace(/\b\w/g, c => c.toUpperCase())
-                        : '';
                     const displayAddress = construirDisplayAddress({
                         calleDisplay,
                         alturaPublica: altPub,
