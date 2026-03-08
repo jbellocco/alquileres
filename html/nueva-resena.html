@@ -74,16 +74,50 @@
                             </select>
                         </div>
 
-                        <div class="input-group" id="partido-group">
-                            <label for="partido">Partido / Localidad</label>
-                            <input type="text" id="partido" placeholder="Ej: La Plata, Rosario...">
+                        <!-- Buenos Aires: partido via Georef -->
+                        <div class="input-group" id="grupo-partido-select" style="display:none;">
+                            <label for="partido-select">Partido <span id="partido-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
+                            <select id="partido-select" onchange="onPartidoChange()" disabled>
+                                <option value="" disabled selected>Seleccioná partido...</option>
+                            </select>
+                        </div>
+                        <!-- Otras provincias: texto libre -->
+                        <div class="input-group" id="grupo-partido-libre" style="display:none;">
+                            <label for="partido-libre">Ciudad / Partido</label>
+                            <input type="text" id="partido-libre" placeholder="Ej: Rosario, Córdoba...">
                         </div>
                     </div>
 
                     <div class="input-row-2">
+                        <!-- Buenos Aires: localidad via Georef -->
+                        <div class="input-group" id="grupo-localidad" style="display:none;">
+                            <label for="localidad-select">Localidad <span id="localidad-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
+                            <select id="localidad-select" disabled>
+                                <option value="" disabled selected>Primero elegí el partido...</option>
+                            </select>
+                        </div>
+                        <!-- CABA: barrio lista controlada -->
                         <div class="input-group" id="barrio-group" style="display:none;">
                             <label for="barrio">Barrio</label>
-                            <input type="text" id="barrio" placeholder="Ej: Palermo, Villa Crespo...">
+                            <select id="barrio">
+                                <option value="" disabled selected>Seleccioná barrio</option>
+                                <option>Agronomía</option><option>Almagro</option><option>Balvanera</option>
+                                <option>Barracas</option><option>Belgrano</option><option>Boedo</option>
+                                <option>Caballito</option><option>Chacarita</option><option>Coghlan</option>
+                                <option>Colegiales</option><option>Constitución</option><option>Flores</option>
+                                <option>Floresta</option><option>La Boca</option><option>La Paternal</option>
+                                <option>Liniers</option><option>Mataderos</option><option>Monte Castro</option>
+                                <option>Montserrat</option><option>Nueva Pompeya</option><option>Núñez</option>
+                                <option>Palermo</option><option>Parque Avellaneda</option><option>Parque Chacabuco</option>
+                                <option>Parque Chas</option><option>Parque Patricios</option><option>Puerto Madero</option>
+                                <option>Recoleta</option><option>Retiro</option><option>Saavedra</option>
+                                <option>San Cristóbal</option><option>San Nicolás</option><option>San Telmo</option>
+                                <option>Soldati</option><option>Versalles</option><option>Villa Crespo</option>
+                                <option>Villa del Parque</option><option>Villa Devoto</option><option>Villa General Mitre</option>
+                                <option>Villa Lugano</option><option>Villa Luro</option><option>Villa Ortúzar</option>
+                                <option>Villa Pueyrredón</option><option>Villa Real</option><option>Villa Riachuelo</option>
+                                <option>Villa Santa Rita</option><option>Villa Urquiza</option>
+                            </select>
                         </div>
 
                         <div class="input-group">
@@ -322,17 +356,87 @@
     </footer>
 
     <script>
-        function onJurisdiccionChange() {
-            const esCABA = document.getElementById('provincia').value === 'CABA';
-            // Partido: solo para fuera de CABA
-            const grupoPartido = document.getElementById('partido-group');
-            grupoPartido.style.display = esCABA ? 'none' : 'block';
-            if (esCABA) document.getElementById('partido').value = '';
-            // Barrio: solo para CABA
-            const grupoBarrio = document.getElementById('barrio-group');
-            grupoBarrio.style.display = esCABA ? 'block' : 'none';
-            if (!esCABA) document.getElementById('barrio').value = '';
+        const GEOREF = 'https://apis.datos.gob.ar/georef/api';
+
+        async function onJurisdiccionChange() {
+            const provincia = document.getElementById('provincia').value;
+            const esCABA = provincia === 'CABA';
+            const esBA   = provincia === 'Buenos Aires';
+
+            // Ocultar y resetear todos los grupos de ubicación
+            document.getElementById('grupo-partido-select').style.display = 'none';
+            document.getElementById('grupo-partido-libre').style.display  = 'none';
+            document.getElementById('grupo-localidad').style.display      = 'none';
+            document.getElementById('barrio-group').style.display         = 'none';
+            document.getElementById('partido-select').innerHTML = '<option value="" disabled selected>Seleccioná partido...</option>';
+            document.getElementById('partido-select').disabled = true;
+            document.getElementById('localidad-select').innerHTML = '<option value="" disabled selected>Primero elegí el partido...</option>';
+            document.getElementById('localidad-select').disabled = true;
+            document.getElementById('partido-libre').value = '';
+            document.getElementById('barrio').value = '';
+
+            if (!provincia) return;
+
+            if (esCABA) {
+                document.getElementById('barrio-group').style.display = 'block';
+            } else if (esBA) {
+                document.getElementById('grupo-partido-select').style.display = 'block';
+                document.getElementById('grupo-localidad').style.display = 'block';
+                await cargarPartidos(provincia);
+            } else {
+                document.getElementById('grupo-partido-libre').style.display = 'block';
+            }
         }
+
+        async function cargarPartidos(provincia) {
+            const select  = document.getElementById('partido-select');
+            const loading = document.getElementById('partido-loading');
+            loading.style.display = 'inline';
+            try {
+                const res  = await fetch(`${GEOREF}/departamentos?provincia=${encodeURIComponent(provincia)}&max=200&orden=nombre&campos=nombre`);
+                const json = await res.json();
+                select.innerHTML = '<option value="" disabled selected>Seleccioná partido...</option>';
+                (json.departamentos || []).forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = opt.textContent = d.nombre;
+                    select.appendChild(opt);
+                });
+                select.disabled = false;
+            } catch (e) {
+                select.innerHTML = '<option value="" disabled selected>Error al cargar — escribí manualmente</option>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function onPartidoChange() {
+            const partido  = document.getElementById('partido-select').value;
+            const provincia = document.getElementById('provincia').value;
+            const select   = document.getElementById('localidad-select');
+            const loading  = document.getElementById('localidad-loading');
+            if (!partido) return;
+            select.disabled = true;
+            select.innerHTML = '<option value="" disabled selected>Cargando...</option>';
+            loading.style.display = 'inline';
+            try {
+                const res  = await fetch(`${GEOREF}/localidades?departamento=${encodeURIComponent(partido)}&provincia=${encodeURIComponent(provincia)}&max=200&orden=nombre&campos=nombre`);
+                const json = await res.json();
+                select.innerHTML = '<option value="" disabled selected>Seleccioná localidad...</option>';
+                (json.localidades || []).forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = opt.textContent = l.nombre;
+                    select.appendChild(opt);
+                });
+                select.disabled = false;
+            } catch (e) {
+                select.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        window.onJurisdiccionChange = onJurisdiccionChange;
+        window.onPartidoChange = onPartidoChange;
 
         // Toggle tipo de vivienda
         function onTipoViviendaChange() {
@@ -460,8 +564,16 @@
             const errorDiv = document.getElementById('form-error');
 
             const provincia   = document.getElementById('provincia').value;
-            const partido     = document.getElementById('partido').value.trim();
-            const barrio      = document.getElementById('barrio').value.trim();
+            const esCABA      = provincia === 'CABA';
+            const esBA        = provincia === 'Buenos Aires';
+            // partido: BA → select Georef | CABA → vacío | otros → texto libre
+            const partido     = esBA   ? document.getElementById('partido-select').value
+                              : esCABA ? ''
+                              :          document.getElementById('partido-libre').value.trim();
+            // barrio/localidad: CABA → barrio select | BA → localidad select | otros → vacío
+            const barrio      = esCABA ? document.getElementById('barrio').value
+                              : esBA   ? document.getElementById('localidad-select').value
+                              :          '';
             const codigoPostal = document.getElementById('codigoPostal').value.trim();
             const calle        = document.getElementById('calle').value.trim();
             const alturaExacta = document.getElementById('numeroDireccion').value.trim();
@@ -477,9 +589,18 @@
             const problemas   = Array.from(document.querySelectorAll('input[name="problemas"]:checked')).map(el => el.value);
             const recomendaria = document.querySelector('input[name="recomendaria"]:checked')?.value || null;
 
-            const esCABA = provincia === 'CABA';
-            if (!provincia || (esCABA && !barrio) || !calle || !titulo || !texto || !puntaje) {
-                errorDiv.textContent = 'Por favor completá: provincia' + (esCABA ? ', barrio' : '') + ', calle, título, reseña y puntaje.';
+            if (!provincia || (esCABA && !barrio) || (esBA && (!partido || !barrio)) || !calle || !titulo || !texto || !puntaje) {
+                const falta = [
+                    !provincia && 'provincia',
+                    esCABA && !barrio && 'barrio',
+                    esBA && !partido && 'partido',
+                    esBA && !barrio && 'localidad',
+                    !calle && 'calle',
+                    !titulo && 'título',
+                    !texto && 'reseña',
+                    !puntaje && 'puntaje',
+                ].filter(Boolean).join(', ');
+                errorDiv.textContent = `Por favor completá: ${falta}.`;
                 errorDiv.style.display = 'block';
                 return;
             }
