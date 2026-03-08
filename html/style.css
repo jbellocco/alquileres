@@ -223,12 +223,19 @@ main section:nth-child(2) article img {
     display: block;
 }
 
+main section:nth-child(2) article .card-body {
+    padding: 12px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 main section:nth-child(2) article h3 {
-    padding: 12px 14px 4px;
     color: var(--accent);
     display: flex;
     align-items: center;
     gap: 6px;
+    margin: 0;
 }
 
 main section:nth-child(2) article h3 i {
@@ -236,20 +243,18 @@ main section:nth-child(2) article h3 i {
     font-size: 0.85rem;
 }
 
-main section:nth-child(2) article p:first-of-type {
-    padding: 2px 14px 6px;
-    color: var(--star);
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-}
-
-main section:nth-child(2) article p:last-child {
-    padding: 0 14px 14px;
+main section:nth-child(2) article p {
+    margin: 0;
     font-size: 0.85rem;
     color: var(--neutral-500);
     line-height: 1.4;
+}
+
+main section:nth-child(2) article .card-stars {
+    color: var(--star);
+    display: flex;
+    align-items: center;
+    gap: 2px;
 }
 
 /* ===== AVATAR DEL HEADER ===== */

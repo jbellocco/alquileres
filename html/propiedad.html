@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propiedad - Reseñas de Alquileres</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .prop-wrap {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .btn-volver {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 20px;
+            text-decoration: none;
+        }
+        .btn-volver:hover { color: var(--primary-dark); }
+
+        /* ===== CARD DE PROPIEDAD ===== */
+        .prop-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .prop-img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .prop-img-wrap {
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            background: var(--neutral-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neutral-200);
+            font-size: 3rem;
+        }
+
+        .prop-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .prop-body {
+            padding: 20px 28px 28px;
+            border-top: 3px solid var(--primary);
+        }
+
+        .prop-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .prop-titulo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
+        }
+
+        .prop-ubicacion {
+            font-size: 0.85rem;
+            color: var(--neutral-500);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 16px;
+        }
+        .prop-ubicacion i { color: var(--primary); font-size: 0.72rem; }
+
+        .prop-dir { display: none; }
+
+        .prop-stats {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            padding: 16px 0;
+            border-top: 1px solid var(--neutral-200);
+            border-bottom: 1px solid var(--neutral-200);
+            margin-bottom: 0;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-stars {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: var(--star);
+            font-size: 1rem;
+        }
+
+        /* ===== LISTA DE RESEÑAS ===== */
+        .reviews-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .reviews-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .btn-agregar {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 9px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-agregar:hover { background: var(--primary-dark); }
+
+        .review-item {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .review-stars {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: var(--star);
+        }
+
+        .review-titulo {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .review-texto {
+            font-size: 0.9rem;
+            color: var(--neutral-500);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .review-rapidos {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .badge-verde   { background: #e8f5e9; color: #2e7d32; }
+        .badge-rojo    { background: #fdecea; color: #c0392b; }
+        .badge-naranja { background: #fff3e0; color: #c46a09; }
+        .badge-gris    { background: var(--neutral-100); color: var(--accent); border: 1px solid var(--neutral-200); }
+
+        .review-meta {
+            font-size: 0.78rem;
+            color: var(--neutral-500);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .review-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .review-top {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .review-content { flex: 1; }
+
+        @media (max-width: 600px) {
+            .prop-body { padding: 20px 18px; }
+            .prop-stats { gap: 16px; }
+            .reviews-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .review-item { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><a href="index.html" style="color:inherit; text-decoration:none;"><i class="fa-solid fa-house"></i> Reseñas de Alquileres</a></h1>
+        <div id="header-auth">
+            <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+            <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+        </div>
+        <div id="header-user" style="display:none; position:relative; align-items:center; gap:10px;">
+            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+            </button>
+            <span id="header-nombre" class="header-nombre"></span>
+            <div id="user-dropdown" class="user-dropdown">
+                <span id="dropdown-nombre" class="dropdown-nombre"></span>
+                <hr class="dropdown-divider">
+                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="prop-wrap">
+        <a href="index.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+        <div id="prop-contenido">
+            <p style="text-align:center; color:#6c757d; padding:60px 0;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando...
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
+        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
+    </footer>
+
+    <script type="module">
+        import { Amplify } from 'https://esm.sh/aws-amplify@6';
+        import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { awsConfig } from './aws-config.js';
+        import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+
+        Amplify.configure(awsConfig);
+        const clientIAM  = generateClient({ authMode: 'iam' });
+        const clientAuth = generateClient();
+
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+
+        function estrellas(puntaje) {
+            const p = Math.round(puntaje || 0);
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += i <= p ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
+            }
+            return html;
+        }
+
+        function formatFecha(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        const TRATO_LABELS = {
+            'muy-bueno': { icon: 'fa-face-smile', label: 'Muy bueno',  cls: 'badge-verde'   },
+            'normal':    { icon: 'fa-face-meh',   label: 'Normal',     cls: 'badge-gris'    },
+            'dificil':   { icon: 'fa-face-frown', label: 'Difícil',    cls: 'badge-naranja' },
+            'estafador': { icon: 'fa-skull',       label: 'Estafador',  cls: 'badge-rojo'    },
+        };
+        const REC_LABELS = {
+            'si':      { icon: 'fa-thumbs-up',    label: 'Lo recomiendo',    cls: 'badge-verde'   },
+            'no':      { icon: 'fa-thumbs-down',   label: 'No lo recomiendo', cls: 'badge-rojo'    },
+            'tal-vez': { icon: 'fa-scale-balanced', label: 'Tal vez',         cls: 'badge-naranja' },
+        };
+        const PROBLEMA_LABELS = {
+            'aumentos': 'Aumentos injustificados',
+            'arreglos': 'No arregla cosas',
+            'expensas': 'Expensas altas',
+            'ruidos':   'Ruidos molestos',
+            'humedad':  'Humedad',
+            'ninguno':  'Sin problemas',
+        };
+
+        function renderBadgesTrato(rev) {
+            const badges = [];
+            if (rev.trato && TRATO_LABELS[rev.trato]) {
+                const t = TRATO_LABELS[rev.trato];
+                badges.push(`<span class="badge ${t.cls}"><i class="fa-solid ${t.icon}"></i> ${t.label}</span>`);
+            }
+            if (rev.recomendaria && REC_LABELS[rev.recomendaria]) {
+                const r = REC_LABELS[rev.recomendaria];
+                badges.push(`<span class="badge ${r.cls}"><i class="fa-solid ${r.icon}"></i> ${r.label}</span>`);
+            }
+            if (rev.problemas && rev.problemas.length > 0 && !rev.problemas.includes('ninguno')) {
+                rev.problemas.forEach(p => {
+                    if (p !== 'ninguno') badges.push(`<span class="badge badge-gris">${PROBLEMA_LABELS[p] || p}</span>`);
+                });
+            }
+            return badges.join('');
+        }
+
+        async function cargarPropiedad() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) {
+                document.getElementById('prop-contenido').innerHTML =
+                    '<p style="text-align:center; color:#e74c3c; padding:60px 0;"><i class="fa-solid fa-triangle-exclamation"></i> Propiedad no encontrada.</p>';
+                return;
+            }
+
+            try {
+                const user   = await getUsuarioActual();
+                const client = user ? clientAuth : clientIAM;
+
+                // Cargar propiedad y sus reseñas en paralelo
+                const [{ data: prop }, { data: reviews }] = await Promise.all([
+                    client.models.Property.get({ id }),
+                    client.models.Review.list({ filter: { propertyId: { eq: id } }, limit: 50 }),
+                ]);
+
+                if (!prop) {
+                    document.getElementById('prop-contenido').innerHTML =
+                        '<p style="text-align:center; color:#e74c3c; padding:60px 0;"><i class="fa-solid fa-triangle-exclamation"></i> Propiedad no encontrada.</p>';
+                    return;
+                }
+
+                document.title = `${prop.displayAddress || prop.barrio} - Reseñas de Alquileres`;
+
+                const ubicacion = [prop.barrio, prop.partido, prop.provincia].filter(Boolean).join(' — ');
+                const prom      = prop.puntajePromedio ? prop.puntajePromedio.toFixed(1) : '–';
+                const total     = prop.totalResenas || 0;
+                const rec       = prop.totalRecomiendan || 0;
+                const noRec     = prop.totalNoRecomiendan || 0;
+                const inmobTag  = prop.porInmobiliaria && prop.nombreInmobiliaria
+                    ? `<span style="background:#fff3e0; color:#c46a09; padding:2px 10px; border-radius:999px; font-size:0.8rem; font-weight:500;"><i class="fa-solid fa-building"></i> ${prop.nombreInmobiliaria}</span>`
+                    : '';
+
+                document.getElementById('prop-contenido').innerHTML = `
+                    <!-- CARD DE PROPIEDAD -->
+                    <div class="prop-card">
+                        <div id="prop-img-wrap" class="prop-img-wrap">
+                            <div class="prop-img-placeholder">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
+                        </div>
+                        <div class="prop-body">
+                            <div class="prop-header">
+                                <div class="prop-titulo">${[prop.calleDisplay, prop.alturaPublica].filter(Boolean).join(' ') || prop.displayAddress || prop.barrio}</div>
+                                ${inmobTag}
+                            </div>
+                            <div class="prop-ubicacion">
+                                <i class="fa-solid fa-map-pin"></i> ${ubicacion}
+                            </div>
+                            <div class="prop-stats">
+                                <div class="stat-item">
+                                    <div class="stat-stars">${estrellas(prop.puntajePromedio)}</div>
+                                    <div class="stat-value">${prom}</div>
+                                    <div class="stat-label">Promedio</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${total}</div>
+                                    <div class="stat-label">Reseña${total !== 1 ? 's' : ''}</div>
+                                </div>
+                                ${rec > 0 ? `<div class="stat-item">
+                                    <div class="stat-value" style="color:#2e7d32;"><i class="fa-solid fa-thumbs-up"></i> ${rec}</div>
+                                    <div class="stat-label">Recomiendan</div>
+                                </div>` : ''}
+                                ${noRec > 0 ? `<div class="stat-item">
+                                    <div class="stat-value" style="color:#c0392b;"><i class="fa-solid fa-thumbs-down"></i> ${noRec}</div>
+                                    <div class="stat-label">No recomiendan</div>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LISTA DE RESEÑAS -->
+                    <div class="reviews-header">
+                        <h2><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Reseñas (${reviews.length})</h2>
+                        <a href="nueva-resena.html" class="btn-agregar">
+                            <i class="fa-solid fa-plus"></i> Agregar reseña
+                        </a>
+                    </div>
+
+                    <div id="reviews-lista">
+                        ${reviews.length === 0
+                            ? '<p style="text-align:center; color:#6c757d; padding:40px 0;"><i class="fa-solid fa-comment-slash"></i> Sin reseñas todavía. ¡Sé el primero!</p>'
+                            : reviews.map((rev, i) => `
+                                <div class="review-item">
+                                    <div class="review-top">
+                                        <div id="rev-img-${i}" style="display:none;">
+                                            <img class="review-img" alt="foto">
+                                        </div>
+                                        <div class="review-content">
+                                            <div class="review-stars">${estrellas(rev.puntaje)} <span style="font-size:0.85rem; color:#6c757d; margin-left:4px;">${rev.puntaje}/5</span></div>
+                                            <div class="review-titulo">${rev.titulo}</div>
+                                        </div>
+                                    </div>
+                                    <div class="review-texto">${rev.texto}</div>
+                                    ${renderBadgesTrato(rev) ? `<div class="review-rapidos">${renderBadgesTrato(rev)}</div>` : ''}
+                                    <div class="review-meta">
+                                        <i class="fa-regular fa-calendar"></i> ${formatFecha(rev.createdAt)}
+                                    </div>
+                                </div>`).join('')
+                        }
+                    </div>`;
+
+                // Cargar imagen de la propiedad (primera reseña con imagen)
+                const revConImg = reviews.find(r => r.imagenes && r.imagenes[0]);
+                if (revConImg) {
+                    try {
+                        const { url } = await getUrl({ path: revConImg.imagenes[0] });
+                        document.getElementById('prop-img-wrap').innerHTML =
+                            `<img src="${url}" alt="foto" style="width:100%; height:100%; object-fit:cover; display:block;">`;
+                    } catch (e) {}
+                }
+
+                // Cargar miniaturas de cada reseña
+                reviews.forEach(async (rev, i) => {
+                    if (rev.imagenes && rev.imagenes[0]) {
+                        try {
+                            const { url } = await getUrl({ path: rev.imagenes[0] });
+                            const wrap = document.getElementById(`rev-img-${i}`);
+                            if (wrap) {
+                                wrap.style.display = 'block';
+                                wrap.querySelector('img').src = url.toString();
+                            }
+                        } catch (e) {}
+                    }
+                });
+
+            } catch (err) {
+                document.getElementById('prop-contenido').innerHTML =
+                    `<p style="text-align:center; color:#e74c3c; padding:60px 0;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar.<br>
+                        <small style="font-size:0.8rem; color:#aaa;">${err.message || err}</small>
+                    </p>`;
+            }
+        }
+
+        // ===== HEADER AUTH =====
+        async function inicializarHeader() {
+            const user = await getUsuarioActual();
+            cargarPropiedad();
+            if (!user) return;
+
+            document.getElementById('header-auth').style.display = 'none';
+            document.getElementById('header-user').style.display = 'flex';
+
+            try {
+                const { data: perfiles } = await clientAuth.models.UserProfile.list({
+                    filter: { userId: { eq: user.userId } }
+                });
+                const perfil = perfiles && perfiles[0];
+                if (perfil) {
+                    const nombre = capitalizar(perfil.nombre);
+                    const apellido = capitalizar(perfil.apellido);
+                    document.getElementById('header-nombre').textContent = nombre;
+                    document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
+                    if (perfil.fotoPerfil) {
+                        try {
+                            const { url } = await getUrl({ path: perfil.fotoPerfil });
+                            const img = document.getElementById('avatar-img');
+                            img.src = url.toString();
+                            img.style.display = 'block';
+                            document.getElementById('avatar-icon').style.display = 'none';
+                        } catch (e) {}
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function toggleDropdown() {
+            document.getElementById('user-dropdown').classList.toggle('open');
+        }
+        window.toggleDropdown = toggleDropdown;
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('header-user').contains(e.target)) {
+                document.getElementById('user-dropdown').classList.remove('open');
+            }
+        });
+
+        async function cerrarSesion() { await logout(); }
+        window.cerrarSesion = cerrarSesion;
+
+        inicializarHeader();
+    </script>
+
+</body>
+</html>

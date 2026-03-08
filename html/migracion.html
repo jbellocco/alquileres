@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migración de datos — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #2c3e50; padding: 40px 20px; }
+        .wrap { max-width: 640px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .subtitle { color: #6c757d; font-size: 0.9rem; margin-bottom: 32px; }
+        .card { background: white; border-radius: 12px; padding: 24px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #e07b10; color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.95rem;
+            font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .btn:hover { background: #c46a09; }
+        .btn:disabled { background: #aaa; cursor: not-allowed; }
+        .log {
+            background: #1e1e1e; color: #d4d4d4; border-radius: 8px;
+            padding: 16px; font-size: 0.8rem; font-family: monospace;
+            height: 320px; overflow-y: auto; margin-top: 16px; line-height: 1.6;
+        }
+        .log .ok    { color: #4ec9b0; }
+        .log .warn  { color: #dcdcaa; }
+        .log .error { color: #f48771; }
+        .log .info  { color: #9cdcfe; }
+        .progress { margin-top: 12px; font-size: 0.875rem; color: #6c757d; }
+        .progress strong { color: #2c3e50; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1><i class="fa-solid fa-database"></i> Migración de datos</h1>
+    <p class="subtitle">Convierte las Resenas existentes al nuevo modelo Property + Review.<br>
+    Ejecutar una sola vez. Verificar que el sandbox esté corriendo con el nuevo schema.</p>
+
+    <div class="card">
+        <button class="btn" id="btn-migrar" onclick="iniciarMigracion()">
+            <i class="fa-solid fa-play"></i> Iniciar migración
+        </button>
+        <p class="progress" id="progreso"></p>
+        <div class="log" id="log"><span class="info">Esperando inicio...</span></div>
+    </div>
+
+    <p style="font-size:0.8rem; color:#6c757d;">
+        <i class="fa-solid fa-triangle-exclamation" style="color:#e07b10;"></i>
+        Esta página no borra ni modifica las Resenas originales.
+        Solo crea Properties y Reviews nuevas a partir de ellas.
+    </p>
+
+    <hr style="border:none; border-top:1px solid #dee2e6; margin: 32px 0;">
+
+    <div class="card" style="border: 2px solid #dc3545;">
+        <h2 style="font-size:1rem; margin-bottom:8px; color:#dc3545;">
+            <i class="fa-solid fa-trash"></i> Borrar datos de prueba
+        </h2>
+        <p style="font-size:0.875rem; color:#6c757d; margin-bottom:16px;">
+            Borra <strong>todas las Resenas</strong> (legado), <strong>todas las Reviews</strong> y <strong>todas las Properties</strong>.
+            Irreversible. Solo usar en entorno de prueba.
+        </p>
+        <button class="btn" id="btn-borrar" onclick="borrarTodo()" style="background:#dc3545;">
+            <i class="fa-solid fa-trash"></i> Borrar todo
+        </button>
+        <p class="progress" id="progreso-borrar"></p>
+        <div class="log" id="log-borrar" style="height:160px;"><span class="info">Esperando...</span></div>
+    </div>
+</div>
+
+<script type="module">
+    import { Amplify } from 'https://esm.sh/aws-amplify@6';
+    import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+    import { awsConfig } from './aws-config.js';
+    import { getUsuarioActual } from './auth.js';
+    import {
+        parsearDireccion, normalizarCalle, calcularAlturaPublica,
+        generarFingerprint, construirDisplayAddress, actualizarStatsConNuevaResena
+    } from './property-utils.js';
+
+    Amplify.configure(awsConfig);
+    const client = generateClient();
+
+    const logEl      = document.getElementById('log');
+    const progresoEl = document.getElementById('progreso');
+
+    function log(msg, tipo = '') {
+        const span = document.createElement('span');
+        span.className = tipo;
+        span.textContent = msg + '\n';
+        logEl.appendChild(span);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function iniciarMigracion() {
+        const btn = document.getElementById('btn-migrar');
+        btn.disabled = true;
+        logEl.innerHTML = '';
+
+        const user = await getUsuarioActual();
+        if (!user) {
+            log('❌ Debés iniciar sesión antes de migrar.', 'error');
+            btn.disabled = false;
+            return;
+        }
+
+        log('🔍 Cargando Resenas legacy...', 'info');
+
+        // Cargar todas las Resenas (con paginación si hay muchas)
+        let todasLasResenas = [];
+        let nextToken = null;
+        do {
+            const params = { limit: 100 };
+            if (nextToken) params.nextToken = nextToken;
+            const { data, nextToken: nt } = await client.models.Resena.list(params);
+            todasLasResenas = todasLasResenas.concat(data);
+            nextToken = nt;
+        } while (nextToken);
+
+        log(`✅ Encontradas ${todasLasResenas.length} Resenas.`, 'ok');
+
+        let ok = 0, errores = 0, propExistentes = 0;
+        const propCache = {}; // fingerprint → property
+
+        for (let i = 0; i < todasLasResenas.length; i++) {
+            const r = todasLasResenas[i];
+            progresoEl.innerHTML = `Procesando <strong>${i + 1}/${todasLasResenas.length}</strong>...`;
+
+            try {
+                const provincia    = r.provincia || r.zona || '';
+                const partido      = r.partido || '';
+                const barrio       = r.barrio || '';
+                const direccion    = r.direccion || '';
+                const tipoVivienda = r.tipoVivienda || 'casa';
+                const piso         = r.piso || '';
+                const depto        = r.depto || '';
+
+                const { calle, numero: alturaExacta } = parsearDireccion(direccion);
+                const calleNorm   = normalizarCalle(calle);
+                const altPub      = calcularAlturaPublica(alturaExacta);
+                const fingerprint = generarFingerprint({
+                    provincia, partido, barrio, calleNorm,
+                    alturaExacta, tipoVivienda, piso, depto,
+                });
+
+                // Buscar property en cache o en DB
+                let property = propCache[fingerprint];
+                if (!property) {
+                    const { data: existing } = await client.models.Property.list({
+                        filter: { propertyFingerprint: { eq: fingerprint } }
+                    });
+                    if (existing && existing[0]) {
+                        property = existing[0];
+                        propExistentes++;
+                        log(`  ↩ Property existente: ${property.displayAddress || fingerprint}`, 'warn');
+                    } else {
+                        const calleDisplay = calle
+                            ? calle.replace(/\b\w/g, c => c.toUpperCase())
+                            : '';
+                        const displayAddress = construirDisplayAddress({
+                            calleDisplay,
+                            alturaPublica: altPub,
+                            barrio, partido, provincia,
+                        });
+                        const { data: nueva } = await client.models.Property.create({
+                            propertyFingerprint: fingerprint,
+                            provincia,
+                            partido:            partido || null,
+                            barrio,
+                            codigoPostal:       r.codigoPostal || null,
+                            calleNormalizada:   calleNorm,
+                            calleDisplay,
+                            alturaPublica:      altPub,
+                            displayAddress,
+                            tipoVivienda,
+                            porInmobiliaria:    r.porInmobiliaria || false,
+                            nombreInmobiliaria: r.nombreInmobiliaria || null,
+                            alturaExacta:       alturaExacta || null,
+                            piso:               piso || null,
+                            depto:              depto || null,
+                            totalResenas:       0,
+                            puntajePromedio:    0,
+                            totalRecomiendan:   0,
+                            totalNoRecomiendan: 0,
+                        });
+                        property = nueva;
+                        log(`  ✚ Property creada: ${displayAddress}`, 'ok');
+                    }
+                    propCache[fingerprint] = property;
+                }
+
+                // Crear Review
+                await client.models.Review.create({
+                    propertyId:      property.id,
+                    autorId:         r.autorId,
+                    titulo:          r.titulo,
+                    texto:           r.texto,
+                    puntaje:         r.puntaje,
+                    trato:           r.trato || null,
+                    problemas:       r.problemas || null,
+                    recomendaria:    r.recomendaria || null,
+                    estado:          'activo',
+                    imagenes:        r.imagenes || null,
+                    porInmobiliaria:    r.porInmobiliaria || false,
+                    nombreInmobiliaria: r.nombreInmobiliaria || null,
+                });
+
+                // Actualizar stats
+                const stats = actualizarStatsConNuevaResena(property, r.puntaje, r.recomendaria);
+                await client.models.Property.update({ id: property.id, ...stats });
+                // Actualizar cache local
+                propCache[fingerprint] = { ...property, ...stats };
+
+                ok++;
+            } catch (err) {
+                errores++;
+                log(`  ❌ Error en Resena ${r.id}: ${err.message}`, 'error');
+            }
+        }
+
+        progresoEl.innerHTML = `Completado: <strong>${ok} migradas</strong>, ${propExistentes} properties reutilizadas, ${errores} errores.`;
+        log(`\n=== FIN: ${ok} OK | ${errores} errores ===`, 'info');
+        btn.disabled = false;
+    }
+
+    window.iniciarMigracion = iniciarMigracion;
+
+    async function borrarTodo() {
+        if (!confirm('¿Seguro? Esto borra TODAS las Resenas, Reviews y Properties. No se puede deshacer.')) return;
+
+        const btn     = document.getElementById('btn-borrar');
+        const logB    = document.getElementById('log-borrar');
+        const progB   = document.getElementById('progreso-borrar');
+        btn.disabled  = true;
+        logB.innerHTML = '';
+
+        function logB2(msg, tipo = '') {
+            const span = document.createElement('span');
+            span.className = tipo;
+            span.textContent = msg + '\n';
+            logB.appendChild(span);
+            logB.scrollTop = logB.scrollHeight;
+        }
+
+        async function borrarModelo(nombre, listFn) {
+            let total = 0;
+            let nextToken = null;
+            do {
+                const params = { limit: 100 };
+                if (nextToken) params.nextToken = nextToken;
+                const { data: items, nextToken: nt } = await listFn(params);
+                nextToken = nt;
+                for (const item of items) {
+                    await client.models[nombre].delete({ id: item.id });
+                    total++;
+                    progB.innerHTML = `Borrando ${nombre}... <strong>${total}</strong>`;
+                }
+            } while (nextToken);
+            return total;
+        }
+
+        try {
+            logB2('🗑 Borrando Resenas...', 'info');
+            const r = await borrarModelo('Resena', p => client.models.Resena.list(p));
+            logB2(`✅ ${r} Resenas borradas.`, 'ok');
+
+            logB2('🗑 Borrando Reviews...', 'info');
+            const rv = await borrarModelo('Review', p => client.models.Review.list(p));
+            logB2(`✅ ${rv} Reviews borradas.`, 'ok');
+
+            logB2('🗑 Borrando Properties...', 'info');
+            const pr = await borrarModelo('Property', p => client.models.Property.list(p));
+            logB2(`✅ ${pr} Properties borradas.`, 'ok');
+
+            progB.innerHTML = `<strong>Listo.</strong> ${r} Resenas, ${rv} Reviews, ${pr} Properties eliminadas.`;
+            logB2('=== Todo borrado ===', 'info');
+        } catch (err) {
+            logB2(`❌ Error: ${err.message}`, 'error');
+        }
+
+        btn.disabled = false;
+    }
+
+    window.borrarTodo = borrarTodo;
+</script>
+</body>
+</html>

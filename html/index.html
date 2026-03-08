@@ -29,9 +29,11 @@
                 <span id="dropdown-nombre" class="dropdown-nombre"></span>
                 <hr class="dropdown-divider">
                 <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                <button onclick="document.getElementById('foto-perfil-input').click()"><i class="fa-solid fa-camera"></i> Cambiar foto</button>
                 <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
             </div>
         </div>
+        <input type="file" id="foto-perfil-input" accept="image/*" style="display:none;">
     </header>
 
     <main>
@@ -52,6 +54,13 @@
                 <button class="filtro-zona" data-zona="Córdoba"><i class="fa-solid fa-location-dot"></i> Córdoba</button>
                 <button class="filtro-zona" data-zona="Santa Fe"><i class="fa-solid fa-location-dot"></i> Santa Fe</button>
             </div>
+            <div style="justify-content:flex-end;">
+                <select id="orden" style="border:1.5px solid #e9ecef; border-radius:8px; padding:8px 12px; font-family:'Inter',sans-serif; font-size:0.875rem; color:#2c3e50; background:#fff; cursor:pointer;">
+                    <option value="recientes">Más recientes</option>
+                    <option value="mejor">Mejor valoradas</option>
+                    <option value="peor">Peor valoradas</option>
+                </select>
+            </div>
         </section>
 
         <section id="resenas-grid">
@@ -69,7 +78,7 @@
     <script type="module">
         import { Amplify } from 'https://esm.sh/aws-amplify@6';
         import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
-        import { getUrl } from 'https://esm.sh/aws-amplify@6/storage';
+        import { getUrl, uploadData } from 'https://esm.sh/aws-amplify@6/storage';
         import { awsConfig } from './aws-config.js';
         import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
 
@@ -77,94 +86,143 @@
         const clientIAM = generateClient({ authMode: 'iam' });
         const clientAuth = generateClient(); // usa Cognito para datos privados
 
-        let todasLasResenas = [];
-        let clientResenas = clientIAM; // se actualiza a clientAuth si hay sesión
+        let todasLasProperties = [];
+        let clientData = clientIAM; // se actualiza a clientAuth si hay sesión
+        let perfilActual = null;
+
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
 
         function estrellas(puntaje) {
+            const p = Math.round(puntaje || 0);
             let html = '';
             for (let i = 1; i <= 5; i++) {
-                html += i <= puntaje
+                html += i <= p
                     ? '<i class="fa-solid fa-star"></i>'
                     : '<i class="fa-regular fa-star"></i>';
             }
             return html;
         }
 
-        function renderResenas(lista) {
+        function ordenarLista(lista) {
+            const orden = document.getElementById('orden').value;
+            const copia = [...lista];
+            if (orden === 'mejor') copia.sort((a, b) => (b.puntajePromedio || 0) - (a.puntajePromedio || 0));
+            else if (orden === 'peor') copia.sort((a, b) => (a.puntajePromedio || 0) - (b.puntajePromedio || 0));
+            else copia.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return copia;
+        }
+
+        function renderProperties(lista) {
             const grid = document.getElementById('resenas-grid');
             if (lista.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron reseñas</p>';
+                grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron propiedades</p>';
                 return;
             }
-            grid.innerHTML = lista.map((r, i) => `
-                <article>
+            const ordenada = ordenarLista(lista);
+            grid.innerHTML = ordenada.map((p, i) => {
+                const ubicacion = [p.barrio, p.partido, p.provincia].filter(Boolean).join(' — ');
+                const dirPublica = p.displayAddress || [
+                    p.calleNormalizada ? p.calleNormalizada.replace(/\b\w/g, c => c.toUpperCase()) : '',
+                    p.alturaPublica
+                ].filter(Boolean).join(' ');
+                const prom  = p.puntajePromedio ? p.puntajePromedio.toFixed(1) : '–';
+                const total = p.totalResenas || 0;
+                const rec   = p.totalRecomiendan || 0;
+                const noRec = p.totalNoRecomiendan || 0;
+                const inmob = p.porInmobiliaria && p.nombreInmobiliaria
+                    ? `<span style="font-size:0.78rem; background:#fff3e0; color:#c46a09; padding:2px 8px; border-radius:999px; font-weight:500;">${p.nombreInmobiliaria}</span>`
+                    : '';
+                const recBadge = rec > 0 || noRec > 0
+                    ? `<p style="display:flex; gap:8px; flex-wrap:wrap;">
+                        ${rec > 0 ? `<span style="display:inline-flex; align-items:center; gap:4px; background:#e8f5e9; color:#2e7d32; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-thumbs-up"></i> ${rec}</span>` : ''}
+                        ${noRec > 0 ? `<span style="display:inline-flex; align-items:center; gap:4px; background:#fdecea; color:#c0392b; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-thumbs-down"></i> ${noRec}</span>` : ''}
+                      </p>`
+                    : '';
+                return `
+                <article style="cursor:pointer;" onclick="location.href='propiedad.html?id=${p.id}'">
                     <div id="img-wrap-${i}" style="background:#f8f9fa; height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                        <i class="fa-solid fa-image" style="font-size:2rem; color:#ced4da;"></i>
+                        <i class="fa-solid fa-building" style="font-size:2rem; color:#ced4da;"></i>
                     </div>
-                    <h3><i class="fa-solid fa-map-pin"></i> ${r.barrio} — ${r.zona}</h3>
-                    <p>${estrellas(r.puntaje)} ${r.puntaje}/5</p>
-                    <p><strong>${r.titulo}</strong></p>
-                    <p>${r.texto}</p>
-                </article>
-            `).join('');
+                    <div class="card-body">
+                        <h3><i class="fa-solid fa-map-pin"></i> ${ubicacion}</h3>
+                        ${dirPublica ? `<p style="display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${dirPublica} ${inmob}</p>` : (inmob ? `<p>${inmob}</p>` : '')}
+                        <p class="card-stars">${estrellas(p.puntajePromedio)} ${prom}/5</p>
+                        <p style="font-size:0.82rem; color:#6c757d;"><i class="fa-solid fa-comment" style="color:#e07b10; font-size:0.75rem;"></i> ${total} reseña${total !== 1 ? 's' : ''}</p>
+                        ${recBadge}
+                    </div>
+                </article>`;
+            }).join('');
 
-            // Cargar URLs de imágenes de forma asíncrona
-            lista.forEach(async (r, i) => {
-                if (r.imagenes && r.imagenes[0]) {
-                    try {
-                        const { url } = await getUrl({ path: r.imagenes[0] });
+            // Cargar imagen de la primera reseña de cada propiedad de forma asíncrona
+            ordenada.forEach(async (p, i) => {
+                try {
+                    const { data: reviews } = await clientData.models.Review.list({
+                        filter: { propertyId: { eq: p.id } },
+                        limit: 1
+                    });
+                    const rev = reviews && reviews[0];
+                    if (rev && rev.imagenes && rev.imagenes[0]) {
+                        const { url } = await getUrl({ path: rev.imagenes[0] });
                         const wrap = document.getElementById(`img-wrap-${i}`);
                         if (wrap) wrap.innerHTML = `<img src="${url}" alt="foto" style="width:100%;height:100%;object-fit:cover;">`;
-                    } catch (e) {}
-                }
+                    }
+                } catch (e) {}
             });
         }
 
-        async function cargarResenas() {
+        async function cargarProperties() {
             try {
-                const { data } = await clientResenas.models.Resena.list({ limit: 20 });
-                todasLasResenas = data;
-                renderResenas(data);
+                const { data } = await clientData.models.Property.list({ limit: 50 });
+                todasLasProperties = data;
+                renderProperties(data);
             } catch (err) {
-                console.error('Error cargarResenas:', err);
+                console.error('Error cargarProperties:', err);
                 document.getElementById('resenas-grid').innerHTML =
                     `<p style="text-align:center; color:#e74c3c; grid-column:1/-1; padding:40px 0;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar reseñas<br>
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar propiedades<br>
                         <small style="font-size:0.8rem; color:#aaa;">${err.message || err}</small>
                     </p>`;
             }
         }
 
-        // Filtro por zona
+        // Filtro por zona (provincia)
         document.querySelectorAll('.filtro-zona').forEach(btn => {
             btn.addEventListener('click', () => {
                 const zona = btn.dataset.zona;
                 const filtradas = zona
-                    ? todasLasResenas.filter(r => r.zona === zona)
-                    : todasLasResenas;
-                renderResenas(filtradas);
+                    ? todasLasProperties.filter(p => p.provincia === zona)
+                    : todasLasProperties;
+                renderProperties(filtradas);
             });
         });
 
         // Buscador
         document.getElementById('buscador').addEventListener('input', (e) => {
             const q = e.target.value.toLowerCase();
-            const filtradas = todasLasResenas.filter(r =>
-                r.barrio.toLowerCase().includes(q) ||
-                r.zona.toLowerCase().includes(q) ||
-                r.titulo.toLowerCase().includes(q)
+            const filtradas = todasLasProperties.filter(p =>
+                (p.barrio || '').toLowerCase().includes(q) ||
+                (p.provincia || '').toLowerCase().includes(q) ||
+                (p.partido || '').toLowerCase().includes(q) ||
+                (p.displayAddress || '').toLowerCase().includes(q)
             );
-            renderResenas(filtradas);
+            renderProperties(filtradas);
+        });
+
+        // Orden
+        document.getElementById('orden').addEventListener('change', () => {
+            renderProperties(todasLasProperties);
         });
 
         // ===== HEADER AUTH =====
         async function inicializarHeader() {
             const user = await getUsuarioActual();
             if (user) {
-                // Usuario logueado: usar Cognito para leer reseñas
-                clientResenas = clientAuth;
+                clientData = clientAuth;
             }
-            cargarResenas();
+            cargarProperties();
 
             if (!user) return;
 
@@ -189,16 +247,14 @@
                 }
 
                 if (perfil) {
-                    document.getElementById('header-nombre').textContent = perfil.nombre;
-                    document.getElementById('dropdown-nombre').textContent =
-                        `${perfil.nombre} ${perfil.apellido}`;
+                    perfilActual = perfil;
+                    const nombre = capitalizar(perfil.nombre);
+                    const apellido = capitalizar(perfil.apellido);
+                    document.getElementById('header-nombre').textContent = nombre;
+                    document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
 
                     if (perfil.fotoPerfil) {
-                        const { url } = await getUrl({ path: perfil.fotoPerfil });
-                        const img = document.getElementById('avatar-img');
-                        img.src = url.toString();
-                        img.style.display = 'block';
-                        document.getElementById('avatar-icon').style.display = 'none';
+                        mostrarAvatarFoto(perfil.fotoPerfil);
                     }
                 }
             } catch (e) {
@@ -223,6 +279,42 @@
             await logout();
         }
         window.cerrarSesion = cerrarSesion;
+
+        async function mostrarAvatarFoto(path) {
+            try {
+                const { url } = await getUrl({ path });
+                const img = document.getElementById('avatar-img');
+                const icon = document.getElementById('avatar-icon');
+                img.src = url.toString();
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } catch (e) {}
+        }
+
+        async function subirFotoPerfil(file) {
+            if (!file || !perfilActual) return;
+            const ext = file.name.split('.').pop();
+            try {
+                const result = await uploadData({
+                    path: ({ identityId }) => `perfiles/${identityId}/foto.${ext}`,
+                    data: file,
+                    options: { contentType: file.type }
+                }).result;
+                await clientAuth.models.UserProfile.update({
+                    id: perfilActual.id,
+                    fotoPerfil: result.path
+                });
+                perfilActual.fotoPerfil = result.path;
+                await mostrarAvatarFoto(result.path);
+            } catch (e) {
+                console.error('Error al subir foto:', e);
+            }
+        }
+
+        document.getElementById('foto-perfil-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) subirFotoPerfil(file);
+        });
 
         inicializarHeader();
     </script>

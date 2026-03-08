@@ -28,6 +28,77 @@ export const awsConfig = {
     model_introspection: {
       version: 1,
       models: {
+        Property: {
+          name: "Property",
+          fields: {
+            id:                  { name: "id",                  isArray: false, type: "ID",          isRequired: true,  attributes: [] },
+            propertyFingerprint: { name: "propertyFingerprint", isArray: false, type: "String",      isRequired: true,  attributes: [] },
+            provincia:           { name: "provincia",           isArray: false, type: "String",      isRequired: true,  attributes: [] },
+            partido:             { name: "partido",             isArray: false, type: "String",      isRequired: false, attributes: [] },
+            barrio:              { name: "barrio",              isArray: false, type: "String",      isRequired: true,  attributes: [] },
+            codigoPostal:        { name: "codigoPostal",        isArray: false, type: "String",      isRequired: false, attributes: [] },
+            calleNormalizada:    { name: "calleNormalizada",    isArray: false, type: "String",      isRequired: false, attributes: [] },
+            calleDisplay:        { name: "calleDisplay",        isArray: false, type: "String",      isRequired: false, attributes: [] },
+            alturaPublica:       { name: "alturaPublica",       isArray: false, type: "String",      isRequired: false, attributes: [] },
+            displayAddress:      { name: "displayAddress",      isArray: false, type: "String",      isRequired: false, attributes: [] },
+            tipoVivienda:        { name: "tipoVivienda",        isArray: false, type: "String",      isRequired: false, attributes: [] },
+            porInmobiliaria:     { name: "porInmobiliaria",     isArray: false, type: "Boolean",     isRequired: false, attributes: [] },
+            nombreInmobiliaria:  { name: "nombreInmobiliaria",  isArray: false, type: "String",      isRequired: false, attributes: [] },
+            alturaExacta:        { name: "alturaExacta",        isArray: false, type: "String",      isRequired: false, attributes: [] },
+            piso:                { name: "piso",                isArray: false, type: "String",      isRequired: false, attributes: [] },
+            depto:               { name: "depto",               isArray: false, type: "String",      isRequired: false, attributes: [] },
+            totalResenas:        { name: "totalResenas",        isArray: false, type: "Int",         isRequired: false, attributes: [] },
+            puntajePromedio:     { name: "puntajePromedio",     isArray: false, type: "Float",       isRequired: false, attributes: [] },
+            totalRecomiendan:    { name: "totalRecomiendan",    isArray: false, type: "Int",         isRequired: false, attributes: [] },
+            totalNoRecomiendan:  { name: "totalNoRecomiendan",  isArray: false, type: "Int",         isRequired: false, attributes: [] },
+            createdAt: { name: "createdAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true },
+            updatedAt: { name: "updatedAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true }
+          },
+          syncable: true,
+          pluralName: "Properties",
+          attributes: [
+            { type: "model", properties: {} },
+            { type: "auth", properties: { rules: [
+              { allow: "private", operations: ["create","read","update","delete"] },
+              { allow: "public", provider: "iam", operations: ["read"] }
+            ]}},
+            { type: "key", properties: { name: "propertiesByPropertyFingerprint", queryField: "listPropertyByPropertyFingerprint", fields: ["propertyFingerprint"] } }
+          ],
+          primaryKeyInfo: { isCustomPrimaryKey: false, primaryKeyFieldName: "id", sortKeyFieldNames: [] }
+        },
+        Review: {
+          name: "Review",
+          fields: {
+            id:              { name: "id",              isArray: false, type: "ID",      isRequired: true,  attributes: [] },
+            propertyId:      { name: "propertyId",      isArray: false, type: "String",  isRequired: true,  attributes: [] },
+            autorId:         { name: "autorId",         isArray: false, type: "String",  isRequired: true,  attributes: [] },
+            titulo:          { name: "titulo",          isArray: false, type: "String",  isRequired: true,  attributes: [] },
+            texto:           { name: "texto",           isArray: false, type: "String",  isRequired: true,  attributes: [] },
+            puntaje:         { name: "puntaje",         isArray: false, type: "Int",     isRequired: true,  attributes: [] },
+            imagenes:        { name: "imagenes",        isArray: true,  type: "String",  isRequired: false, attributes: [], isArrayNullable: true },
+            trato:           { name: "trato",           isArray: false, type: "String",  isRequired: false, attributes: [] },
+            problemas:       { name: "problemas",       isArray: true,  type: "String",  isRequired: false, attributes: [], isArrayNullable: true },
+            recomendaria:    { name: "recomendaria",    isArray: false, type: "String",  isRequired: false, attributes: [] },
+            estado:          { name: "estado",          isArray: false, type: "String",  isRequired: false, attributes: [] },
+            motivoRechazo:   { name: "motivoRechazo",   isArray: false, type: "String",  isRequired: false, attributes: [] },
+            porInmobiliaria:    { name: "porInmobiliaria",    isArray: false, type: "Boolean", isRequired: false, attributes: [] },
+            nombreInmobiliaria: { name: "nombreInmobiliaria", isArray: false, type: "String",  isRequired: false, attributes: [] },
+            createdAt: { name: "createdAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true },
+            updatedAt: { name: "updatedAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true }
+          },
+          syncable: true,
+          pluralName: "Reviews",
+          attributes: [
+            { type: "model", properties: {} },
+            { type: "auth", properties: { rules: [
+              { allow: "private", operations: ["create","read","update","delete"] },
+              { allow: "public", provider: "iam", operations: ["read"] }
+            ]}},
+            { type: "key", properties: { name: "reviewsByPropertyId", queryField: "listReviewByPropertyId", fields: ["propertyId"] } },
+            { type: "key", properties: { name: "reviewsByAutorId",    queryField: "listReviewByAutorId",    fields: ["autorId"] } }
+          ],
+          primaryKeyInfo: { isCustomPrimaryKey: false, primaryKeyFieldName: "id", sortKeyFieldNames: [] }
+        },
         Resena: {
           name: "Resena",
           fields: {
@@ -40,6 +111,18 @@ export const awsConfig = {
             imagenes: { name: "imagenes", isArray: true, type: "String", isRequired: false, attributes: [], isArrayNullable: true },
             autorId: { name: "autorId", isArray: false, type: "String", isRequired: true, attributes: [] },
             autorNombre: { name: "autorNombre", isArray: false, type: "String", isRequired: false, attributes: [] },
+            provincia:          { name: "provincia",          isArray: false, type: "String",  isRequired: false, attributes: [] },
+            partido:            { name: "partido",            isArray: false, type: "String",  isRequired: false, attributes: [] },
+            codigoPostal:       { name: "codigoPostal",       isArray: false, type: "String",  isRequired: false, attributes: [] },
+            direccion:          { name: "direccion",          isArray: false, type: "String",  isRequired: false, attributes: [] },
+            tipoVivienda:       { name: "tipoVivienda",       isArray: false, type: "String",  isRequired: false, attributes: [] },
+            piso:               { name: "piso",               isArray: false, type: "String",  isRequired: false, attributes: [] },
+            depto:              { name: "depto",              isArray: false, type: "String",  isRequired: false, attributes: [] },
+            porInmobiliaria:    { name: "porInmobiliaria",    isArray: false, type: "Boolean", isRequired: false, attributes: [] },
+            nombreInmobiliaria: { name: "nombreInmobiliaria", isArray: false, type: "String",  isRequired: false, attributes: [] },
+            trato:              { name: "trato",              isArray: false, type: "String",  isRequired: false, attributes: [] },
+            problemas:          { name: "problemas",          isArray: true,  type: "String",  isRequired: false, attributes: [], isArrayNullable: true },
+            recomendaria:       { name: "recomendaria",       isArray: false, type: "String",  isRequired: false, attributes: [] },
             createdAt: { name: "createdAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true },
             updatedAt: { name: "updatedAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true }
           },
@@ -47,21 +130,12 @@ export const awsConfig = {
           pluralName: "Resenas",
           attributes: [
             { type: "model", properties: {} },
-            {
-              type: "auth",
-              properties: {
-                rules: [
-                  { allow: "private", operations: ["create","read","update","delete"] },
-                  { allow: "public", provider: "iam", operations: ["read"] }
-                ]
-              }
-            }
+            { type: "auth", properties: { rules: [
+              { allow: "private", operations: ["create","read","update","delete"] },
+              { allow: "public", provider: "iam", operations: ["read"] }
+            ]}}
           ],
-          primaryKeyInfo: {
-            isCustomPrimaryKey: false,
-            primaryKeyFieldName: "id",
-            sortKeyFieldNames: []
-          }
+          primaryKeyInfo: { isCustomPrimaryKey: false, primaryKeyFieldName: "id", sortKeyFieldNames: [] }
         },
         UserProfile: {
           name: "UserProfile",
@@ -82,21 +156,12 @@ export const awsConfig = {
           pluralName: "UserProfiles",
           attributes: [
             { type: "model", properties: {} },
-            {
-              type: "auth",
-              properties: {
-                rules: [
-                  { provider: "userPools", ownerField: "owner", allow: "owner", identityClaim: "cognito:username", operations: ["create","update","delete","read"] },
-                  { allow: "private", operations: ["read"] }
-                ]
-              }
-            }
+            { type: "auth", properties: { rules: [
+              { provider: "userPools", ownerField: "owner", allow: "owner", identityClaim: "cognito:username", operations: ["create","update","delete","read"] },
+              { allow: "private", operations: ["read"] }
+            ]}}
           ],
-          primaryKeyInfo: {
-            isCustomPrimaryKey: false,
-            primaryKeyFieldName: "id",
-            sortKeyFieldNames: []
-          }
+          primaryKeyInfo: { isCustomPrimaryKey: false, primaryKeyFieldName: "id", sortKeyFieldNames: [] }
         }
       },
       enums: {},
