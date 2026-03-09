@@ -509,6 +509,47 @@ footer i { color: var(--primary); }
     color: var(--primary-dark);
 }
 
+/* ===== COMBOBOX ===== */
+.combo-wrap { position: relative; }
+.combo-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--accent);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.combo-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(224,123,16,0.15);
+}
+.combo-input::placeholder { color: var(--neutral-500); }
+.combo-input:disabled { background: var(--neutral-100); color: var(--neutral-500); cursor: not-allowed; }
+.combo-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: var(--white);
+    border: 1.5px solid var(--primary);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: var(--shadow-md);
+}
+.combo-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+.combo-option:hover { background: var(--primary-light); color: var(--primary); }
+
 /* ===== REGISTRO: input con prefijo $ ===== */
 .input-prefix {
     display: flex;

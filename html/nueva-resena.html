@@ -74,50 +74,40 @@
                             </select>
                         </div>
 
-                        <!-- Buenos Aires: partido via Georef -->
+                        <!-- Buenos Aires: partido combobox (Georef) -->
                         <div class="input-group" id="grupo-partido-select" style="display:none;">
-                            <label for="partido-select">Partido <span id="partido-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
-                            <select id="partido-select" onchange="onPartidoChange()" disabled>
-                                <option value="" disabled selected>Seleccioná partido...</option>
-                            </select>
+                            <label>Partido <span id="partido-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
+                            <div class="combo-wrap">
+                                <input type="text" id="partido-input" class="combo-input" placeholder="Escribí para buscar..." autocomplete="off" disabled>
+                                <div class="combo-dropdown" id="partido-dropdown"></div>
+                            </div>
                         </div>
-                        <!-- Otras provincias: texto libre -->
+                        <!-- Otras provincias: partido combobox (Georef) -->
                         <div class="input-group" id="grupo-partido-libre" style="display:none;">
-                            <label for="partido-libre">Ciudad / Partido</label>
-                            <input type="text" id="partido-libre" placeholder="Ej: Rosario, Córdoba...">
+                            <label>Ciudad / Partido <span id="partido-libre-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
+                            <div class="combo-wrap">
+                                <input type="text" id="partido-libre-input" class="combo-input" placeholder="Escribí para buscar..." autocomplete="off" disabled>
+                                <div class="combo-dropdown" id="partido-libre-dropdown"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="input-row-2">
-                        <!-- Buenos Aires: localidad via Georef -->
+                        <!-- Buenos Aires: localidad combobox (Georef) -->
                         <div class="input-group" id="grupo-localidad" style="display:none;">
-                            <label for="localidad-select">Localidad <span id="localidad-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
-                            <select id="localidad-select" disabled>
-                                <option value="" disabled selected>Primero elegí el partido...</option>
-                            </select>
+                            <label>Localidad <span id="localidad-loading" style="display:none;font-size:0.8rem;color:#aaa;"><i class="fa-solid fa-spinner fa-spin"></i></span></label>
+                            <div class="combo-wrap">
+                                <input type="text" id="localidad-input" class="combo-input" placeholder="Primero elegí el partido..." autocomplete="off" disabled>
+                                <div class="combo-dropdown" id="localidad-dropdown"></div>
+                            </div>
                         </div>
-                        <!-- CABA: barrio lista controlada -->
+                        <!-- CABA: barrio combobox (lista controlada) -->
                         <div class="input-group" id="barrio-group" style="display:none;">
-                            <label for="barrio">Barrio</label>
-                            <select id="barrio">
-                                <option value="" disabled selected>Seleccioná barrio</option>
-                                <option>Agronomía</option><option>Almagro</option><option>Balvanera</option>
-                                <option>Barracas</option><option>Belgrano</option><option>Boedo</option>
-                                <option>Caballito</option><option>Chacarita</option><option>Coghlan</option>
-                                <option>Colegiales</option><option>Constitución</option><option>Flores</option>
-                                <option>Floresta</option><option>La Boca</option><option>La Paternal</option>
-                                <option>Liniers</option><option>Mataderos</option><option>Monte Castro</option>
-                                <option>Montserrat</option><option>Nueva Pompeya</option><option>Núñez</option>
-                                <option>Palermo</option><option>Parque Avellaneda</option><option>Parque Chacabuco</option>
-                                <option>Parque Chas</option><option>Parque Patricios</option><option>Puerto Madero</option>
-                                <option>Recoleta</option><option>Retiro</option><option>Saavedra</option>
-                                <option>San Cristóbal</option><option>San Nicolás</option><option>San Telmo</option>
-                                <option>Soldati</option><option>Versalles</option><option>Villa Crespo</option>
-                                <option>Villa del Parque</option><option>Villa Devoto</option><option>Villa General Mitre</option>
-                                <option>Villa Lugano</option><option>Villa Luro</option><option>Villa Ortúzar</option>
-                                <option>Villa Pueyrredón</option><option>Villa Real</option><option>Villa Riachuelo</option>
-                                <option>Villa Santa Rita</option><option>Villa Urquiza</option>
-                            </select>
+                            <label>Barrio</label>
+                            <div class="combo-wrap">
+                                <input type="text" id="barrio-input" class="combo-input" placeholder="Escribí para buscar..." autocomplete="off">
+                                <div class="combo-dropdown" id="barrio-dropdown"></div>
+                            </div>
                         </div>
 
                         <div class="input-group">
@@ -357,23 +347,116 @@
 
     <script>
         const GEOREF = 'https://apis.datos.gob.ar/georef/api';
+        const BARRIOS_CABA = [
+            'Agronomía','Almagro','Balvanera','Barracas','Belgrano','Boedo',
+            'Caballito','Chacarita','Coghlan','Colegiales','Constitución','Flores','Floresta',
+            'La Boca','La Paternal','Liniers','Mataderos','Monte Castro','Montserrat',
+            'Nueva Pompeya','Núñez','Palermo','Parque Avellaneda','Parque Chacabuco',
+            'Parque Chas','Parque Patricios','Puerto Madero','Recoleta','Retiro','Saavedra',
+            'San Cristóbal','San Nicolás','San Telmo','Soldati','Versalles','Villa Crespo',
+            'Villa del Parque','Villa Devoto','Villa General Mitre','Villa Lugano','Villa Luro',
+            'Villa Ortúzar','Villa Pueyrredón','Villa Real','Villa Riachuelo','Villa Santa Rita',
+            'Villa Urquiza'
+        ];
+
+        function normSimple(s) {
+            return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function crearCombobox({ inputId, dropdownId, onSelect }) {
+            const input    = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let lista = [];
+
+            function renderOpciones() {
+                const q = normSimple(input.value);
+                const matches = lista.filter(o => !q || normSimple(o).includes(q));
+                dropdown.innerHTML = '';
+                if (!matches.length) { dropdown.style.display = 'none'; return; }
+                matches.slice(0, 80).forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'combo-option';
+                    div.textContent = item;
+                    div.addEventListener('mousedown', e => {
+                        e.preventDefault();
+                        input.value = item;
+                        dropdown.style.display = 'none';
+                        if (onSelect) onSelect(item);
+                    });
+                    dropdown.appendChild(div);
+                });
+                dropdown.style.display = 'block';
+            }
+
+            input.addEventListener('input', () => {
+                if (onSelect) onSelect('');
+                renderOpciones();
+            });
+            input.addEventListener('focus', renderOpciones);
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                    if (lista.length && input.value && !lista.includes(input.value)) {
+                        input.value = '';
+                        if (onSelect) onSelect('');
+                    }
+                }, 150);
+            });
+
+            return {
+                setLista(newLista) {
+                    lista = newLista;
+                    input.value = '';
+                    input.disabled = !newLista.length;
+                    input.placeholder = newLista.length ? 'Escribí para buscar...' : input.placeholder;
+                },
+                getValue() {
+                    return lista.includes(input.value) ? input.value : '';
+                },
+                reset(placeholder) {
+                    lista = [];
+                    input.value = '';
+                    input.disabled = true;
+                    if (placeholder) input.placeholder = placeholder;
+                    dropdown.style.display = 'none';
+                }
+            };
+        }
+
+        let comboPartido, comboLocalidad, comboBarrio, comboPartidoLibre;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            comboPartido = crearCombobox({
+                inputId: 'partido-input', dropdownId: 'partido-dropdown',
+                onSelect: async (partido) => {
+                    comboLocalidad.reset('Cargando localidades...');
+                    if (!partido) { comboLocalidad.reset('Primero elegí el partido...'); return; }
+                    await cargarLocalidades(document.getElementById('provincia').value, partido);
+                }
+            });
+            comboLocalidad    = crearCombobox({ inputId: 'localidad-input',      dropdownId: 'localidad-dropdown' });
+            comboBarrio       = crearCombobox({ inputId: 'barrio-input',         dropdownId: 'barrio-dropdown' });
+            comboBarrio.setLista(BARRIOS_CABA);
+            comboPartidoLibre = crearCombobox({ inputId: 'partido-libre-input',  dropdownId: 'partido-libre-dropdown' });
+            // Exponer globalmente para el script módulo
+            window.comboPartido     = comboPartido;
+            window.comboLocalidad   = comboLocalidad;
+            window.comboBarrio      = comboBarrio;
+            window.comboPartidoLibre = comboPartidoLibre;
+        });
 
         async function onJurisdiccionChange() {
             const provincia = document.getElementById('provincia').value;
             const esCABA = provincia === 'CABA';
             const esBA   = provincia === 'Buenos Aires';
 
-            // Ocultar y resetear todos los grupos de ubicación
-            document.getElementById('grupo-partido-select').style.display = 'none';
-            document.getElementById('grupo-partido-libre').style.display  = 'none';
-            document.getElementById('grupo-localidad').style.display      = 'none';
-            document.getElementById('barrio-group').style.display         = 'none';
-            document.getElementById('partido-select').innerHTML = '<option value="" disabled selected>Seleccioná partido...</option>';
-            document.getElementById('partido-select').disabled = true;
-            document.getElementById('localidad-select').innerHTML = '<option value="" disabled selected>Primero elegí el partido...</option>';
-            document.getElementById('localidad-select').disabled = true;
-            document.getElementById('partido-libre').value = '';
-            document.getElementById('barrio').value = '';
+            ['grupo-partido-select','grupo-partido-libre','grupo-localidad','barrio-group']
+                .forEach(id => document.getElementById(id).style.display = 'none');
+
+            if (comboPartido)     comboPartido.reset('Cargando partidos...');
+            if (comboLocalidad)   comboLocalidad.reset('Primero elegí el partido...');
+            if (comboPartidoLibre) comboPartidoLibre.reset('Cargando...');
+            if (comboBarrio)      comboBarrio.setLista(BARRIOS_CABA); // siempre disponible
 
             if (!provincia) return;
 
@@ -382,61 +465,41 @@
             } else if (esBA) {
                 document.getElementById('grupo-partido-select').style.display = 'block';
                 document.getElementById('grupo-localidad').style.display = 'block';
-                await cargarPartidos(provincia);
+                await cargarPartidos(provincia, 'BA');
             } else {
                 document.getElementById('grupo-partido-libre').style.display = 'block';
+                await cargarPartidos(provincia, 'libre');
             }
         }
 
-        async function cargarPartidos(provincia) {
-            const select  = document.getElementById('partido-select');
-            const loading = document.getElementById('partido-loading');
-            loading.style.display = 'inline';
+        async function cargarPartidos(provincia, tipo) {
+            const loadingId = tipo === 'libre' ? 'partido-libre-loading' : 'partido-loading';
+            document.getElementById(loadingId).style.display = 'inline';
             try {
                 const res  = await fetch(`${GEOREF}/departamentos?provincia=${encodeURIComponent(provincia)}&max=200&orden=nombre&campos=nombre`);
                 const json = await res.json();
-                select.innerHTML = '<option value="" disabled selected>Seleccioná partido...</option>';
-                (json.departamentos || []).forEach(d => {
-                    const opt = document.createElement('option');
-                    opt.value = opt.textContent = d.nombre;
-                    select.appendChild(opt);
-                });
-                select.disabled = false;
-            } catch (e) {
-                select.innerHTML = '<option value="" disabled selected>Error al cargar — escribí manualmente</option>';
-            } finally {
-                loading.style.display = 'none';
-            }
+                const lista = (json.departamentos || [])
+                    .map(d => d.nombre)
+                    .filter(n => !/^Comuna \d+/i.test(n))
+                    .sort();
+                if (tipo === 'libre') comboPartidoLibre.setLista(lista);
+                else                  comboPartido.setLista(lista);
+            } catch (e) { /* falla silenciosa — combo queda disabled */ }
+            finally { document.getElementById(loadingId).style.display = 'none'; }
         }
 
-        async function onPartidoChange() {
-            const partido  = document.getElementById('partido-select').value;
-            const provincia = document.getElementById('provincia').value;
-            const select   = document.getElementById('localidad-select');
-            const loading  = document.getElementById('localidad-loading');
-            if (!partido) return;
-            select.disabled = true;
-            select.innerHTML = '<option value="" disabled selected>Cargando...</option>';
-            loading.style.display = 'inline';
+        async function cargarLocalidades(provincia, partido) {
+            document.getElementById('localidad-loading').style.display = 'inline';
             try {
                 const res  = await fetch(`${GEOREF}/localidades?departamento=${encodeURIComponent(partido)}&provincia=${encodeURIComponent(provincia)}&max=200&orden=nombre&campos=nombre`);
                 const json = await res.json();
-                select.innerHTML = '<option value="" disabled selected>Seleccioná localidad...</option>';
-                (json.localidades || []).forEach(l => {
-                    const opt = document.createElement('option');
-                    opt.value = opt.textContent = l.nombre;
-                    select.appendChild(opt);
-                });
-                select.disabled = false;
-            } catch (e) {
-                select.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
-            } finally {
-                loading.style.display = 'none';
-            }
+                const lista = (json.localidades || []).map(l => l.nombre).sort();
+                comboLocalidad.setLista(lista);
+            } catch (e) { comboLocalidad.reset('Error al cargar'); }
+            finally { document.getElementById('localidad-loading').style.display = 'none'; }
         }
 
         window.onJurisdiccionChange = onJurisdiccionChange;
-        window.onPartidoChange = onPartidoChange;
 
         // Toggle tipo de vivienda
         function onTipoViviendaChange() {
@@ -566,13 +629,13 @@
             const provincia   = document.getElementById('provincia').value;
             const esCABA      = provincia === 'CABA';
             const esBA        = provincia === 'Buenos Aires';
-            // partido: BA → select Georef | CABA → vacío | otros → texto libre
-            const partido     = esBA   ? document.getElementById('partido-select').value
+            // partido: BA → comboPartido | CABA → vacío | otros → comboPartidoLibre
+            const partido     = esBA   ? (window.comboPartido?.getValue()     || '')
                               : esCABA ? ''
-                              :          document.getElementById('partido-libre').value.trim();
-            // barrio/localidad: CABA → barrio select | BA → localidad select | otros → vacío
-            const barrio      = esCABA ? document.getElementById('barrio').value
-                              : esBA   ? document.getElementById('localidad-select').value
+                              :          (window.comboPartidoLibre?.getValue() || '');
+            // barrio/localidad: CABA → comboBarrio | BA → comboLocalidad | otros → vacío
+            const barrio      = esCABA ? (window.comboBarrio?.getValue()    || '')
+                              : esBA   ? (window.comboLocalidad?.getValue() || '')
                               :          '';
             const codigoPostal = document.getElementById('codigoPostal').value.trim();
             const calle        = document.getElementById('calle').value.trim();
