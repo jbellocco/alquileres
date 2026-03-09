@@ -122,7 +122,7 @@
                                 Calle
                                 <span class="private-badge"><i class="fa-solid fa-eye-slash"></i> No es pública exacta</span>
                             </label>
-                            <input type="text" id="calle" placeholder="Ej: Av. Corrientes">
+                            <input type="text" id="calle" placeholder="Ej: Av. Corrientes" onblur="autoSplitCalle()">
                         </div>
                         <div class="input-group" style="margin-bottom:0; width:110px;">
                             <label for="numeroDireccion">Número</label>
@@ -500,6 +500,19 @@
         }
 
         window.onJurisdiccionChange = onJurisdiccionChange;
+
+        function autoSplitCalle() {
+            const calleInput = document.getElementById('calle');
+            const numInput   = document.getElementById('numeroDireccion');
+            const val = calleInput.value.trim();
+            const match = val.match(/^(.*?)\s+(\d+)\s*$/);
+            if (!match) return;
+            // Siempre limpiar el número del campo calle
+            calleInput.value = match[1].trim();
+            // Solo llenar número si estaba vacío
+            if (!numInput.value) numInput.value = match[2];
+        }
+        window.autoSplitCalle = autoSplitCalle;
 
         // Toggle tipo de vivienda
         function onTipoViviendaChange() {
