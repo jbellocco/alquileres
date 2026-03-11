@@ -805,7 +805,7 @@
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publicando...';
 
                 // 4. Crear Review
-                await client.models.Review.create({
+                const { data: reviewCreada, errors: reviewErrors } = await client.models.Review.create({
                     propertyId:      property.id,
                     autorId:         usuarioActual.userId,
                     titulo,
@@ -816,20 +816,19 @@
                     recomendaria,
                     estado:          'activo',
                     imagenes:        imagenes.length > 0 ? imagenes : null,
-                    // Datos opcionales del alquiler
-                    moneda,
-                    precioAlquiler,
-                    tipoContrato,
                     // Inmobiliaria al momento de la reseña
                     porInmobiliaria:    esPorInmob,
                     nombreInmobiliaria: esPorInmob ? nombreInmobiliaria : null,
                 });
+                if (!reviewCreada) throw new Error(reviewErrors?.[0]?.message || 'No se pudo crear la reseña');
 
-                // 5. Actualizar stats de Property (solo si Review fue creada exitosamente)
+                // 5. Actualizar stats de Property (solo campos del schema actual)
                 const nuevosStats = actualizarStatsConNuevaResena(property, {
                     puntaje: parseInt(puntaje), recomendaria, trato, problemas, moneda, tipoContrato,
                 });
-                await client.models.Property.update({ id: property.id, ...nuevosStats });
+                // Excluir campos que requieren deploy del nuevo schema
+                const { problemasAgregados, tratosAgregados, monedasAgregadas, contratosAgregados, ...statsActuales } = nuevosStats;
+                await client.models.Property.update({ id: property.id, ...statsActuales });
 
                 mostrarExito();
             } catch (err) {
