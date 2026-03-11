@@ -269,6 +269,14 @@
                                 Humedad
                             </label>
                             <label class="chip">
+                                <input type="checkbox" name="problemas" value="deposito">
+                                Depósito conflictivo
+                            </label>
+                            <label class="chip">
+                                <input type="checkbox" name="problemas" value="seguridad">
+                                Problemas de seguridad
+                            </label>
+                            <label class="chip">
                                 <input type="checkbox" name="problemas" value="ninguno">
                                 Ninguno
                             </label>
@@ -292,6 +300,49 @@
                             </label>
                         </div>
                     </div>
+                </fieldset>
+
+                <!-- DATOS DEL ALQUILER (opcional) -->
+                <fieldset>
+                    <legend><i class="fa-solid fa-file-contract"></i> Datos del alquiler <span style="font-size:0.78rem; font-weight:400; color:#6c757d;">(opcional — ayudan a enriquecer la ficha)</span></legend>
+
+                    <div class="input-group">
+                        <label>¿En qué moneda pagabas?</label>
+                        <div class="quick-options">
+                            <label class="quick-option">
+                                <input type="radio" name="moneda" value="pesos">
+                                <i class="fa-solid fa-dollar-sign"></i> Pesos
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="moneda" value="dolares">
+                                <i class="fa-solid fa-dollar-sign"></i> Dólares
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="moneda" value="mixto">
+                                <i class="fa-solid fa-arrows-left-right"></i> Mixto
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="precioAlquiler">Precio mensual aproximado <span style="font-size:0.78rem; color:#6c757d;">(al inicio del contrato)</span></label>
+                        <input type="number" id="precioAlquiler" placeholder="Ej: 150000" min="0">
+                    </div>
+
+                    <div class="input-group">
+                        <label>¿Tenías contrato formal?</label>
+                        <div class="quick-options">
+                            <label class="quick-option">
+                                <input type="radio" name="tipoContrato" value="formal">
+                                <i class="fa-solid fa-file-signature"></i> Sí, formal
+                            </label>
+                            <label class="quick-option">
+                                <input type="radio" name="tipoContrato" value="informal">
+                                <i class="fa-solid fa-handshake"></i> No, informal
+                            </label>
+                        </div>
+                    </div>
+
                 </fieldset>
 
                 <!-- IMÁGENES -->
@@ -664,6 +715,9 @@
             const trato       = document.querySelector('input[name="trato"]:checked')?.value || null;
             const problemas   = Array.from(document.querySelectorAll('input[name="problemas"]:checked')).map(el => el.value);
             const recomendaria = document.querySelector('input[name="recomendaria"]:checked')?.value || null;
+            const moneda      = document.querySelector('input[name="moneda"]:checked')?.value || null;
+            const precioAlquiler = parseInt(document.getElementById('precioAlquiler').value) || null;
+            const tipoContrato = document.querySelector('input[name="tipoContrato"]:checked')?.value || null;
 
             if (!provincia || (esCABA && !barrio) || (esBA && (!partido || !barrio)) || !calle || !titulo || !texto || !puntaje) {
                 const falta = [
@@ -762,13 +816,19 @@
                     recomendaria,
                     estado:          'activo',
                     imagenes:        imagenes.length > 0 ? imagenes : null,
+                    // Datos opcionales del alquiler
+                    moneda,
+                    precioAlquiler,
+                    tipoContrato,
                     // Inmobiliaria al momento de la reseña
                     porInmobiliaria:    esPorInmob,
                     nombreInmobiliaria: esPorInmob ? nombreInmobiliaria : null,
                 });
 
                 // 5. Actualizar stats de Property (solo si Review fue creada exitosamente)
-                const nuevosStats = actualizarStatsConNuevaResena(property, parseInt(puntaje), recomendaria);
+                const nuevosStats = actualizarStatsConNuevaResena(property, {
+                    puntaje: parseInt(puntaje), recomendaria, trato, problemas, moneda, tipoContrato,
+                });
                 await client.models.Property.update({ id: property.id, ...nuevosStats });
 
                 mostrarExito();

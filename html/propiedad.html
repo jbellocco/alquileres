@@ -244,11 +244,79 @@
 
         .review-content { flex: 1; }
 
+        /* ===== CHIPS DE PROPIEDAD ===== */
+        .prop-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .prop-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: var(--neutral-100);
+            color: var(--accent);
+            border: 1px solid var(--neutral-200);
+        }
+        .prop-chip-problema { background: #fdecea; color: #c0392b; border-color: #f5c6cb; }
+        .prop-chip-trato-bueno { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+        .prop-chip-trato-malo { background: #fff3e0; color: #c46a09; border-color: #ffe0b2; }
+
+        /* ===== BLOQUES DE INFO AGREGADA ===== */
+        .info-block {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+        .info-block-titulo {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--neutral-500);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .info-block-titulo i { color: var(--primary); }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .info-fact {
+            background: var(--neutral-100);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .info-fact strong {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--neutral-500);
+            margin-bottom: 4px;
+        }
+        .info-fact span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
         @media (max-width: 600px) {
             .prop-body { padding: 20px 18px; }
             .prop-stats { gap: 16px; }
             .reviews-header { flex-direction: column; align-items: flex-start; gap: 12px; }
             .review-item { padding: 16px; }
+            .info-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -336,8 +404,83 @@
             'expensas': 'Expensas altas',
             'ruidos':   'Ruidos molestos',
             'humedad':  'Humedad',
+            'deposito': 'Depósito conflictivo',
+            'seguridad':'Problemas de seguridad',
             'ninguno':  'Sin problemas',
         };
+        const MONEDA_LABELS   = { 'pesos': 'Pesos', 'dolares': 'Dólares', 'mixto': 'Mixto' };
+        const CONTRATO_LABELS = { 'formal': 'Formal', 'informal': 'Informal' };
+
+        // ===== HELPERS PARA DATOS AGREGADOS =====
+        const MIN_RESPALDO = 2; // mínimo de reseñas para mostrar un dato
+
+        function parseContador(jsonStr) {
+            try { return JSON.parse(jsonStr || '{}'); } catch { return {}; }
+        }
+
+        // Retorna entradas ordenadas por count desc, con count >= min
+        function topN(counts, n, min = MIN_RESPALDO) {
+            return Object.entries(counts)
+                .filter(([, v]) => v >= min)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, n);
+        }
+
+        function renderChipsProp(prop) {
+            const chips = [];
+            // Trato mayoritario
+            const tratos = topN(parseContador(prop.tratosAgregados), 1);
+            if (tratos.length) {
+                const [k] = tratos[0];
+                const label = TRATO_LABELS[k]?.label || k;
+                const cls = (k === 'muy-bueno') ? 'prop-chip-trato-bueno'
+                          : (k === 'dificil' || k === 'estafador') ? 'prop-chip-trato-malo'
+                          : '';
+                chips.push(`<span class="prop-chip ${cls}"><i class="fa-solid fa-handshake"></i> ${label}</span>`);
+            }
+            // Top problemas (hasta 3)
+            topN(parseContador(prop.problemasAgregados), 3).forEach(([k]) => {
+                chips.push(`<span class="prop-chip prop-chip-problema"><i class="fa-solid fa-triangle-exclamation"></i> ${PROBLEMA_LABELS[k] || k}</span>`);
+            });
+            return chips.length ? `<div class="prop-chips">${chips.join('')}</div>` : '';
+        }
+
+        function renderDatosUtiles(prop) {
+            const facts = [];
+
+            // Moneda (si hay ≥ MIN_RESPALDO reportando algo)
+            const monedas = topN(parseContador(prop.monedasAgregadas), 1);
+            if (monedas.length) {
+                facts.push({ label: 'Moneda reportada', valor: MONEDA_LABELS[monedas[0][0]] || monedas[0][0] });
+            }
+            // Contrato
+            const contratos = topN(parseContador(prop.contratosAgregados), 1);
+            if (contratos.length) {
+                facts.push({ label: 'Contrato reportado', valor: CONTRATO_LABELS[contratos[0][0]] || contratos[0][0] });
+            }
+            // Problemas comunes (hasta 3)
+            const topProblemas = topN(parseContador(prop.problemasAgregados), 3);
+            if (topProblemas.length) {
+                facts.push({ label: 'Problemas comunes', valor: topProblemas.map(([k]) => PROBLEMA_LABELS[k] || k).join(', ') });
+            }
+            // Intermediación
+            if (prop.nombreInmobiliaria) {
+                facts.push({ label: 'Intermediación', valor: prop.nombreInmobiliaria });
+            }
+
+            if (!facts.length) return '';
+            return `
+                <div class="info-block">
+                    <div class="info-block-titulo"><i class="fa-solid fa-circle-info"></i> Datos reportados por inquilinos</div>
+                    <div class="info-grid">
+                        ${facts.map(f => `
+                            <div class="info-fact">
+                                <strong>${f.label}</strong>
+                                <span>${f.valor}</span>
+                            </div>`).join('')}
+                    </div>
+                </div>`;
+        }
 
         function renderBadgesTrato(rev) {
             const badges = [];
@@ -409,6 +552,7 @@
                             <div class="prop-ubicacion">
                                 <i class="fa-solid fa-map-pin"></i> ${ubicacion}
                             </div>
+                            ${renderChipsProp(prop)}
                             <div class="prop-stats">
                                 <div class="stat-item">
                                     <div class="stat-stars">${estrellas(prop.puntajePromedio)}</div>
@@ -419,17 +563,22 @@
                                     <div class="stat-value">${total}</div>
                                     <div class="stat-label">Reseña${total !== 1 ? 's' : ''}</div>
                                 </div>
-                                ${rec > 0 ? `<div class="stat-item">
+                                ${total >= 2 ? `<div class="stat-item">
+                                    <div class="stat-value" style="color:#2e7d32;">${Math.round(rec / total * 100)}%</div>
+                                    <div class="stat-label">Lo recomiendan</div>
+                                </div>` : rec > 0 ? `<div class="stat-item">
                                     <div class="stat-value" style="color:#2e7d32;"><i class="fa-solid fa-thumbs-up"></i> ${rec}</div>
                                     <div class="stat-label">Recomiendan</div>
                                 </div>` : ''}
-                                ${noRec > 0 ? `<div class="stat-item">
+                                ${noRec > 0 && total < 2 ? `<div class="stat-item">
                                     <div class="stat-value" style="color:#c0392b;"><i class="fa-solid fa-thumbs-down"></i> ${noRec}</div>
                                     <div class="stat-label">No recomiendan</div>
                                 </div>` : ''}
                             </div>
                         </div>
                     </div>
+
+                    ${renderDatosUtiles(prop)}
 
                     <!-- LISTA DE RESEÑAS -->
                     <div class="reviews-header">
