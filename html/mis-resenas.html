@@ -536,7 +536,14 @@
                 await client.models.Review.delete({ id: idABorrar });
                 // Actualizar stats de la Property si está disponible
                 if (item?.property) {
-                    const stats = actualizarStatsAlBorrar(item.property, item.review.puntaje, item.review.recomendaria);
+                    const stats = actualizarStatsAlBorrar(item.property, {
+                        puntaje: item.review.puntaje,
+                        recomendaria: item.review.recomendaria,
+                        trato: item.review.trato,
+                        problemas: item.review.problemas,
+                        moneda: item.review.moneda,
+                        tipoContrato: item.review.tipoContrato,
+                    });
                     await client.models.Property.update({ id: item.property.id, ...stats });
                 }
                 cerrarModal();

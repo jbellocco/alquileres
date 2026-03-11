@@ -210,7 +210,14 @@
                 });
 
                 // Actualizar stats
-                const stats = actualizarStatsConNuevaResena(property, r.puntaje, r.recomendaria);
+                const stats = actualizarStatsConNuevaResena(property, {
+                    puntaje: r.puntaje,
+                    recomendaria: r.recomendaria,
+                    trato: r.trato,
+                    problemas: r.problemas,
+                    moneda: r.moneda,
+                    tipoContrato: r.tipoContrato,
+                });
                 await client.models.Property.update({ id: property.id, ...stats });
                 // Actualizar cache local
                 propCache[fingerprint] = { ...property, ...stats };

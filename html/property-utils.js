@@ -65,21 +65,50 @@ export function construirDisplayAddress({ calleDisplay, alturaPublica, barrio, p
     return [dir, loc].filter(Boolean).join(' — ');
 }
 
-export function actualizarStatsConNuevaResena(property, puntaje, recomendaria) {
+// ===== CONTADORES AGREGADOS =====
+// Almacenados como JSON string en Property: '{"ruidos":3,"humedad":2}'
+// Se incrementan al aprobar una Review y decrementan al borrarla.
+// Threshold: un dato se muestra en la ficha pública si su contador >= MIN_RESPALDO (2).
+
+function actualizarContador(jsonStr, keys, delta) {
+    let counts;
+    try { counts = JSON.parse(jsonStr || '{}'); } catch { counts = {}; }
+    (keys || []).forEach(k => {
+        if (!k || k === 'ninguno') return;
+        counts[k] = Math.max(0, (counts[k] || 0) + delta);
+        if (counts[k] === 0) delete counts[k];
+    });
+    return JSON.stringify(counts);
+}
+
+// ===== STATS CON NUEVA RESEÑA =====
+// review = { puntaje, recomendaria, trato, problemas[], moneda, tipoContrato }
+export function actualizarStatsConNuevaResena(property, review) {
+    const { puntaje, recomendaria, trato, problemas, moneda, tipoContrato } = review;
+
     const oldTotal = property.totalResenas || 0;
     const newTotal = oldTotal + 1;
     const newAvg   = Math.round((((property.puntajePromedio || 0) * oldTotal) + puntaje) / newTotal * 10) / 10;
     const newRecomiendan   = (property.totalRecomiendan   || 0) + (recomendaria === 'si' ? 1 : 0);
     const newNoRecomiendan = (property.totalNoRecomiendan || 0) + (recomendaria === 'no' ? 1 : 0);
+
     return {
         totalResenas:       newTotal,
         puntajePromedio:    newAvg,
         totalRecomiendan:   newRecomiendan,
         totalNoRecomiendan: newNoRecomiendan,
+        problemasAgregados: actualizarContador(property.problemasAgregados, problemas, +1),
+        tratosAgregados:    actualizarContador(property.tratosAgregados,    trato ? [trato] : [], +1),
+        monedasAgregadas:   actualizarContador(property.monedasAgregadas,   moneda ? [moneda] : [], +1),
+        contratosAgregados: actualizarContador(property.contratosAgregados, tipoContrato ? [tipoContrato] : [], +1),
     };
 }
 
-export function actualizarStatsAlBorrar(property, puntaje, recomendaria) {
+// ===== STATS AL BORRAR RESEÑA =====
+// review = { puntaje, recomendaria, trato, problemas[], moneda, tipoContrato }
+export function actualizarStatsAlBorrar(property, review) {
+    const { puntaje, recomendaria, trato, problemas, moneda, tipoContrato } = review;
+
     const oldTotal = property.totalResenas || 0;
     const newTotal = Math.max(0, oldTotal - 1);
     const newAvg   = newTotal === 0
@@ -87,10 +116,15 @@ export function actualizarStatsAlBorrar(property, puntaje, recomendaria) {
         : Math.round((((property.puntajePromedio || 0) * oldTotal) - puntaje) / newTotal * 10) / 10;
     const newRecomiendan   = Math.max(0, (property.totalRecomiendan   || 0) - (recomendaria === 'si' ? 1 : 0));
     const newNoRecomiendan = Math.max(0, (property.totalNoRecomiendan || 0) - (recomendaria === 'no' ? 1 : 0));
+
     return {
         totalResenas:       newTotal,
         puntajePromedio:    newAvg,
         totalRecomiendan:   newRecomiendan,
         totalNoRecomiendan: newNoRecomiendan,
+        problemasAgregados: actualizarContador(property.problemasAgregados, problemas, -1),
+        tratosAgregados:    actualizarContador(property.tratosAgregados,    trato ? [trato] : [], -1),
+        monedasAgregadas:   actualizarContador(property.monedasAgregadas,   moneda ? [moneda] : [], -1),
+        contratosAgregados: actualizarContador(property.contratosAgregados, tipoContrato ? [tipoContrato] : [], -1),
     };
 }

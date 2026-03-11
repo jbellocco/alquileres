@@ -34,6 +34,14 @@ const schema = a.schema({
       puntajePromedio:    a.float(),
       totalRecomiendan:   a.integer(),
       totalNoRecomiendan: a.integer(),
+
+      // Contadores agregados (JSON string: {"ruidos":3,"humedad":2})
+      // Se recalculan con cada Review aprobada/borrada
+      // Solo se muestran en la ficha si el valor tiene respaldo suficiente (≥2 reseñas)
+      problemasAgregados:  a.string(),  // acumulado de Review.problemas
+      tratosAgregados:     a.string(),  // acumulado de Review.trato
+      monedasAgregadas:    a.string(),  // acumulado de Review.moneda
+      contratosAgregados:  a.string(),  // acumulado de Review.tipoContrato
     })
     .secondaryIndexes((index) => [index('propertyFingerprint')])
     .authorization((allow) => [
@@ -55,6 +63,10 @@ const schema = a.schema({
       recomendaria:    a.string(),             // 'si' | 'no' | 'tal-vez'
       estado:          a.string(),             // 'activo' | 'pendiente' | 'rechazado'
       motivoRechazo:   a.string(),
+      // Datos opcionales del alquiler (se acumulan como agregados en Property)
+      moneda:          a.string(),             // 'pesos' | 'dolares' | 'mixto'
+      precioAlquiler:  a.integer(),            // monto mensual aproximado
+      tipoContrato:    a.string(),             // 'formal' | 'informal'
       // Inmobiliaria al momento de la reseña (informativo)
       porInmobiliaria:    a.boolean(),
       nombreInmobiliaria: a.string(),
