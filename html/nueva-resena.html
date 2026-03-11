@@ -760,7 +760,7 @@
                         alturaPublica: altPub,
                         barrio, partido, provincia,
                     });
-                    const { data: nueva } = await client.models.Property.create({
+                    const { data: nueva, errors: propErrors } = await client.models.Property.create({
                         propertyFingerprint: fingerprint,
                         provincia,
                         partido:            partido || null,
@@ -781,6 +781,7 @@
                         totalRecomiendan:   0,
                         totalNoRecomiendan: 0,
                     });
+                    if (!nueva) throw new Error(propErrors?.[0]?.message || 'No se pudo crear la propiedad');
                     property = nueva;
                 }
 
