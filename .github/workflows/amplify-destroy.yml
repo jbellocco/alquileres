@@ -1,0 +1,95 @@
+name: 💥 Destruir App Amplify
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Escribí DESTROY para confirmar'
+        required: true
+        type: string
+      delete_data:
+        description: 'Eliminar también tablas DynamoDB y bucket S3 (borra todos los datos)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'DESTROY' }}
+    steps:
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Obtener App ID desde SSM
+        id: get_app
+        run: |
+          APP_ID=$(aws ssm get-parameter \
+            --name "/alquileres/amplify-app-id" \
+            --query 'Parameter.Value' \
+            --output text 2>/dev/null || echo "NOT_FOUND")
+
+          if [ "$APP_ID" = "NOT_FOUND" ]; then
+            echo "❌ No se encontró el App ID en SSM. ¿Ya fue destruida?"
+            exit 1
+          fi
+
+          echo "app_id=$APP_ID" >> $GITHUB_OUTPUT
+          echo "🎯 App ID: $APP_ID"
+
+      - name: Eliminar stack de backend (CloudFormation)
+        run: |
+          APP_ID="${{ steps.get_app.outputs.app_id }}"
+
+          # Listar stacks relacionados con este app
+          STACKS=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE \
+            --query "StackSummaries[?contains(StackName, '${APP_ID}')].StackName" \
+            --output text)
+
+          if [ -z "$STACKS" ]; then
+            echo "ℹ️  No se encontraron stacks de CloudFormation para este app."
+          else
+            for STACK in $STACKS; do
+              echo "🗑️  Eliminando stack: $STACK"
+              aws cloudformation delete-stack --stack-name "$STACK" || true
+            done
+
+            echo "⏳ Esperando que los stacks terminen de eliminarse..."
+            for STACK in $STACKS; do
+              aws cloudformation wait stack-delete-complete --stack-name "$STACK" 2>/dev/null || true
+              echo "✅ Stack eliminado: $STACK"
+            done
+          fi
+
+      - name: Eliminar Amplify App
+        run: |
+          aws amplify delete-app --app-id "${{ steps.get_app.outputs.app_id }}"
+          echo "✅ Amplify App eliminada"
+
+      - name: Eliminar parámetro SSM
+        run: |
+          aws ssm delete-parameter --name "/alquileres/amplify-app-id" || true
+
+      - name: Resumen
+        run: |
+          echo ""
+          echo "✅ App Amplify destruida."
+          echo ""
+          if [ "${{ inputs.delete_data }}" = "false" ]; then
+            echo "⚠️  Las tablas DynamoDB y el bucket S3 fueron RETENIDOS (DeletionPolicy: Retain)."
+            echo "   Si querés eliminarlos también, en la consola AWS:"
+            echo "   - DynamoDB → Tables → eliminá las que empiecen con 'amplify-'"
+            echo "   - S3 → vaciá y eliminá el bucket 'amplify-alquileres-*'"
+            echo "   - Cognito → User Pools → eliminá el pool"
+          fi
