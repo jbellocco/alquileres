@@ -1,22 +1,28 @@
 name: 🚀 Crear App Amplify
 
+# La conexión GitHub↔Amplify se hace UNA SOLA VEZ manualmente desde la consola AWS.
+# Este workflow registra el App ID en SSM y dispara el primer build.
+#
+# Pasos previos (consola AWS, solo la primera vez):
+#   1. Amplify Console → New app → Host web app
+#   2. Conectar GitHub via GitHub App → seleccionar repo jbellocco/alquileres, branch main
+#   3. Copiar el App ID que aparece en la URL: /apps/<APP_ID>
+#   4. Correr este workflow con ese App ID
+
 on:
   workflow_dispatch:
     inputs:
-      app_name:
-        description: 'Nombre de la app en Amplify'
+      app_id:
+        description: 'App ID de Amplify (lo encontrás en la consola AWS o en la URL)'
         required: true
-        default: 'alquileres'
 
 env:
   AWS_REGION: us-east-1
 
 jobs:
-  create:
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Configurar credenciales AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -24,50 +30,33 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Crear Amplify App
-        id: create_app
+      - name: Verificar que la app existe
         run: |
-          APP_ID=$(aws amplify create-app \
-            --name "${{ inputs.app_name }}" \
-            --repository "https://github.com/${{ github.repository }}" \
-            --access-token "${{ secrets.GH_PAT }}" \
-            --query 'app.appId' \
-            --output text)
-          echo "app_id=$APP_ID" >> $GITHUB_OUTPUT
-          echo "✅ App creada: $APP_ID"
-
-      - name: Conectar branch main
-        run: |
-          aws amplify create-branch \
-            --app-id "${{ steps.create_app.outputs.app_id }}" \
-            --branch-name main \
-            --enable-auto-build
+          aws amplify get-app --app-id "${{ inputs.app_id }}" \
+            --query 'app.name' --output text
+          echo "✅ App encontrada"
 
       - name: Guardar App ID en SSM
         run: |
           aws ssm put-parameter \
             --name "/alquileres/amplify-app-id" \
-            --value "${{ steps.create_app.outputs.app_id }}" \
+            --value "${{ inputs.app_id }}" \
             --type String \
             --overwrite
-          echo "📦 App ID guardado en SSM: /alquileres/amplify-app-id"
+          echo "📦 App ID guardado en SSM"
 
-      - name: Disparar primer build
+      - name: Disparar build
         run: |
           aws amplify start-job \
-            --app-id "${{ steps.create_app.outputs.app_id }}" \
+            --app-id "${{ inputs.app_id }}" \
             --branch-name main \
             --job-type RELEASE
 
           DOMAIN=$(aws amplify get-app \
-            --app-id "${{ steps.create_app.outputs.app_id }}" \
+            --app-id "${{ inputs.app_id }}" \
             --query 'app.defaultDomain' \
             --output text)
 
           echo ""
-          echo "🌐 URL de la app: https://main.$DOMAIN"
-          echo "⚠️  El build puede tardar 3-5 minutos. Revisá la consola de Amplify."
-          echo ""
-          echo "⚠️  IMPORTANTE: Cuando termine el build, el aws-config.js"
-          echo "   se va a actualizar con los nuevos IDs de Cognito/AppSync."
-          echo "   Revisá el amplify_outputs.json generado y actualizá html/aws-config.js si es necesario."
+          echo "🌐 URL: https://main.$DOMAIN"
+          echo "⏳ Build iniciado, tarda ~5 minutos."
