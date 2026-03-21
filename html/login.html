@@ -74,10 +74,12 @@
     <script type="module">
         import { login, getUsuarioActual } from './auth.js';
 
-        // Si ya está logueado, redirigir al inicio
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+
+        // Si ya está logueado, redirigir
         const usuarioActual = await getUsuarioActual();
         if (usuarioActual) {
-            location.href = 'index.html';
+            location.href = redirectUrl;
         }
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -94,7 +96,7 @@
             try {
                 const { isSignedIn } = await login(email, password);
                 if (isSignedIn) {
-                    location.href = 'index.html';
+                    location.href = redirectUrl;
                 }
             } catch (err) {
                 errorMsg.textContent = err.message || 'Error al iniciar sesión';

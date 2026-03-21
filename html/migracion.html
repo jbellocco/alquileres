@@ -86,6 +86,14 @@
     Amplify.configure(awsConfig);
     const client = generateClient();
 
+    // Verificar sesión al cargar — redirigir al login si no hay usuario
+    (async () => {
+        const user = await getUsuarioActual();
+        if (!user) {
+            window.location.href = 'login.html?redirect=migracion.html';
+        }
+    })();
+
     const logEl      = document.getElementById('log');
     const progresoEl = document.getElementById('progreso');
 
@@ -251,6 +259,13 @@
             span.textContent = msg + '\n';
             logB.appendChild(span);
             logB.scrollTop = logB.scrollHeight;
+        }
+
+        const user = await getUsuarioActual();
+        if (!user) {
+            logB2('❌ Debés iniciar sesión antes de borrar.', 'error');
+            btn.disabled = false;
+            return;
         }
 
         async function borrarModelo(nombre, listFn) {
