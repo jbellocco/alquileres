@@ -1,0 +1,207 @@
+name: Seed — Crear reseña de prueba
+
+on:
+  workflow_dispatch:
+    inputs:
+      provincia:
+        description: 'Provincia'
+        default: 'Buenos Aires'
+        required: true
+      barrio:
+        description: 'Barrio'
+        default: 'Palermo'
+        required: true
+      direccion:
+        description: 'Dirección (ej: Corrientes 1234)'
+        default: 'Corrientes 1234'
+        required: true
+      puntaje:
+        description: 'Puntaje (1-5)'
+        default: '4'
+        required: true
+      titulo:
+        description: 'Título de la reseña'
+        default: 'Buena propiedad, bien ubicada'
+        required: true
+      texto:
+        description: 'Texto de la reseña'
+        default: 'El departamento estaba en buen estado. La inmobiliaria respondió bien ante los problemas menores. Recomendaría la propiedad.'
+        required: true
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install dependencies
+        run: pip install requests requests-aws4auth boto3
+
+      - name: Create Property + Review
+        env:
+          PROVINCIA: ${{ github.event.inputs.provincia }}
+          BARRIO: ${{ github.event.inputs.barrio }}
+          DIRECCION: ${{ github.event.inputs.direccion }}
+          PUNTAJE: ${{ github.event.inputs.puntaje }}
+          TITULO: ${{ github.event.inputs.titulo }}
+          TEXTO: ${{ github.event.inputs.texto }}
+        run: |
+          python3 << 'EOF'
+          import json, os, re, uuid
+          import boto3, requests
+          from requests_aws4auth import AWS4Auth
+
+          ENDPOINT = 'https://eple2sdr4fesrnwq5rs7ly5gxm.appsync-api.us-east-1.amazonaws.com/graphql'
+          REGION   = 'us-east-1'
+
+          session     = boto3.Session()
+          credentials = session.get_credentials().get_frozen_credentials()
+          auth        = AWS4Auth(credentials.access_key, credentials.secret_key,
+                                 REGION, 'appsync', session_token=credentials.token)
+
+          def gql(query, variables=None):
+              resp = requests.post(
+                  ENDPOINT,
+                  json={'query': query, 'variables': variables or {}},
+                  auth=auth,
+                  headers={'Content-Type': 'application/json'},
+              )
+              body = resp.json()
+              if 'errors' in body:
+                  raise Exception(json.dumps(body['errors'], ensure_ascii=False))
+              return body['data']
+
+          # ── Normalización ────────────────────────────────────────────────
+          def normalizar(s):
+              import unicodedata
+              s = unicodedata.normalize('NFD', s.lower())
+              s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+              return re.sub(r'\s+', ' ', s).strip()
+
+          def parsear_direccion(d):
+              m = re.match(r'^(.*?)\s+(\d+)\s*$', d.strip())
+              if m:
+                  return m.group(1).strip(), m.group(2).strip()
+              return d.strip(), ''
+
+          def normalizar_calle(calle):
+              c = normalizar(calle)
+              c = re.sub(r'^(av\.?|avenida|gral\.?|general|dr\.?|doctor|ing\.?|ingeniero)\s+', '', c)
+              return re.sub(r'[^a-z0-9\s]', '', c).strip()
+
+          def altura_publica(numero):
+              n = int(numero) if numero.isdigit() else 0
+              return str((n // 100) * 100) if n else numero
+
+          # ── Inputs ───────────────────────────────────────────────────────
+          provincia    = os.environ['PROVINCIA'].strip()
+          barrio       = os.environ['BARRIO'].strip()
+          direccion    = os.environ['DIRECCION'].strip()
+          puntaje      = int(os.environ['PUNTAJE'])
+          titulo       = os.environ['TITULO'].strip()
+          texto        = os.environ['TEXTO'].strip()
+
+          calle_raw, altura_exacta = parsear_direccion(direccion)
+          calle_norm   = normalizar_calle(calle_raw)
+          alt_pub      = altura_publica(altura_exacta)
+          calle_disp   = re.sub(r'\b\w', lambda m: m.group().upper(), calle_raw)
+          partes_addr  = [f"{calle_disp} {altura_exacta}".strip(), barrio, provincia]
+          display_addr = ' — '.join(p for p in partes_addr if p)
+          fingerprint  = f"{normalizar(provincia)}:{calle_norm}:{altura_exacta}:edificio::"
+
+          print(f"Fingerprint : {fingerprint}")
+          print(f"Display     : {display_addr}")
+
+          # ── Buscar o crear Property ───────────────────────────────────────
+          existing = gql('''
+              query ListByFP($fp: String!) {
+                  listPropertyByPropertyFingerprint(propertyFingerprint: $fp) {
+                      items { id displayAddress totalResenas puntajePromedio
+                              totalRecomiendan totalNoRecomiendan
+                              problemasAgregados tratosAgregados
+                              monedasAgregadas contratosAgregados }
+                  }
+              }
+          ''', {'fp': fingerprint})
+
+          items = existing.get('listPropertyByPropertyFingerprint', {}).get('items', [])
+
+          if items:
+              prop = items[0]
+              print(f"Property existente: {prop['id']} — {prop['displayAddress']}")
+          else:
+              created = gql('''
+                  mutation CreateProp($input: CreatePropertyInput!) {
+                      createProperty(input: $input) {
+                          id displayAddress
+                      }
+                  }
+              ''', {'input': {
+                  'propertyFingerprint': fingerprint,
+                  'provincia':           provincia,
+                  'barrio':              barrio,
+                  'calleNormalizada':    calle_norm,
+                  'calleDisplay':        calle_disp,
+                  'alturaPublica':       alt_pub,
+                  'alturaExacta':        altura_exacta,
+                  'displayAddress':      display_addr,
+                  'tipoVivienda':        'edificio',
+                  'totalResenas':        0,
+                  'puntajePromedio':     0.0,
+                  'totalRecomiendan':    0,
+                  'totalNoRecomiendan':  0,
+              }})
+              prop = created['createProperty']
+              print(f"Property creada: {prop['id']} — {prop['displayAddress']}")
+
+          prop_id = prop['id']
+
+          # ── Crear Review ─────────────────────────────────────────────────
+          rev = gql('''
+              mutation CreateRev($input: CreateReviewInput!) {
+                  createReview(input: $input) { id }
+              }
+          ''', {'input': {
+              'propertyId':  prop_id,
+              'autorId':     'github-actions-seed',
+              'titulo':      titulo,
+              'texto':       texto,
+              'puntaje':     puntaje,
+              'trato':       'normal',
+              'problemas':   [],
+              'recomendaria': 'si',
+              'estado':      'activo',
+          }})
+          print(f"Review creada: {rev['createReview']['id']}")
+
+          # ── Actualizar stats ──────────────────────────────────────────────
+          old_total = prop.get('totalResenas') or 0
+          new_total = old_total + 1
+          old_prom  = prop.get('puntajePromedio') or 0.0
+          new_prom  = (old_prom * old_total + puntaje) / new_total
+          new_rec   = (prop.get('totalRecomiendan') or 0) + 1
+
+          tratos_raw = prop.get('tratosAgregados') or '{}'
+          tratos = json.loads(tratos_raw)
+          tratos['normal'] = tratos.get('normal', 0) + 1
+
+          gql('''
+              mutation UpdateProp($input: UpdatePropertyInput!) {
+                  updateProperty(input: $input) { id }
+              }
+          ''', {'input': {
+              'id':                prop_id,
+              'totalResenas':      new_total,
+              'puntajePromedio':   round(new_prom, 2),
+              'totalRecomiendan':  new_rec,
+              'tratosAgregados':   json.dumps(tratos),
+          }})
+          print(f"Stats: {new_total} reseñas, prom {new_prom:.2f}")
+          print("✅ Listo")
+          EOF
