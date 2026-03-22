@@ -27,68 +27,84 @@ on:
         description: 'Texto de la reseña'
         default: 'El departamento estaba en buen estado. La inmobiliaria respondió bien ante los problemas menores. Recomendaría la propiedad.'
         required: true
+      recomendaria:
+        description: 'Recomendaría (si / no / tal-vez)'
+        default: 'si'
+        required: true
+      trato:
+        description: 'Trato (muy-bueno / normal / dificil / estafador)'
+        default: 'normal'
+        required: true
 
 jobs:
   seed:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Install dependencies
-        run: pip install requests requests-aws4auth boto3
+        run: pip install requests boto3
 
       - name: Create Property + Review
         env:
-          PROVINCIA: ${{ github.event.inputs.provincia }}
-          BARRIO: ${{ github.event.inputs.barrio }}
-          DIRECCION: ${{ github.event.inputs.direccion }}
-          PUNTAJE: ${{ github.event.inputs.puntaje }}
-          TITULO: ${{ github.event.inputs.titulo }}
-          TEXTO: ${{ github.event.inputs.texto }}
+          PROVINCIA:    ${{ github.event.inputs.provincia }}
+          BARRIO:       ${{ github.event.inputs.barrio }}
+          DIRECCION:    ${{ github.event.inputs.direccion }}
+          PUNTAJE:      ${{ github.event.inputs.puntaje }}
+          TITULO:       ${{ github.event.inputs.titulo }}
+          TEXTO:        ${{ github.event.inputs.texto }}
+          RECOMENDARIA: ${{ github.event.inputs.recomendaria }}
+          TRATO:        ${{ github.event.inputs.trato }}
+          SEED_USERNAME: ${{ secrets.SEED_USERNAME }}
+          SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
         run: |
-          python3 << 'EOF'
-          import json, os, re, uuid
-          import boto3, requests
-          from requests_aws4auth import AWS4Auth
+          python3 << 'PYEOF'
+          import json, os, re, boto3, requests
 
-          ENDPOINT = 'https://eple2sdr4fesrnwq5rs7ly5gxm.appsync-api.us-east-1.amazonaws.com/graphql'
-          REGION   = 'us-east-1'
+          # ── Config ────────────────────────────────────────────────────────
+          APPSYNC_URL  = 'https://ldwqyceuljhebag4ifwcixn5gq.appsync-api.us-east-1.amazonaws.com/graphql'
+          USER_POOL_ID = 'us-east-1_fphLKO5wM'
+          CLIENT_ID    = '4g65on17i80qh7b4vbloq1memc'
+          REGION       = 'us-east-1'
 
-          session     = boto3.Session()
-          credentials = session.get_credentials().get_frozen_credentials()
-          auth        = AWS4Auth(credentials.access_key, credentials.secret_key,
-                                 REGION, 'appsync', session_token=credentials.token)
+          # ── Login con Cognito → obtener JWT ───────────────────────────────
+          username = os.environ['SEED_USERNAME']
+          password = os.environ['SEED_PASSWORD']
 
+          cognito = boto3.client('cognito-idp', region_name=REGION)
+          auth_resp = cognito.initiate_auth(
+              AuthFlow='USER_PASSWORD_AUTH',
+              AuthParameters={'USERNAME': username, 'PASSWORD': password},
+              ClientId=CLIENT_ID,
+          )
+          id_token = auth_resp['AuthenticationResult']['IdToken']
+          print(f"Login OK — usuario: {username}")
+
+          # ── GraphQL helper ────────────────────────────────────────────────
           def gql(query, variables=None):
               resp = requests.post(
-                  ENDPOINT,
+                  APPSYNC_URL,
                   json={'query': query, 'variables': variables or {}},
-                  auth=auth,
-                  headers={'Content-Type': 'application/json'},
+                  headers={
+                      'Content-Type': 'application/json',
+                      'Authorization': id_token,
+                  },
               )
               body = resp.json()
-              if 'errors' in body:
-                  raise Exception(json.dumps(body['errors'], ensure_ascii=False))
+              if body.get('errors'):
+                  raise Exception(json.dumps(body['errors'], ensure_ascii=False, indent=2))
               return body['data']
 
-          # ── Normalización ────────────────────────────────────────────────
+          # ── Normalización ─────────────────────────────────────────────────
           def normalizar(s):
               import unicodedata
               s = unicodedata.normalize('NFD', s.lower())
-              s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
-              return re.sub(r'\s+', ' ', s).strip()
+              return re.sub(r'\s+', ' ', ''.join(
+                  c for c in s if unicodedata.category(c) != 'Mn'
+              )).strip()
 
           def parsear_direccion(d):
               m = re.match(r'^(.*?)\s+(\d+)\s*$', d.strip())
-              if m:
-                  return m.group(1).strip(), m.group(2).strip()
-              return d.strip(), ''
+              return (m.group(1).strip(), m.group(2).strip()) if m else (d.strip(), '')
 
           def normalizar_calle(calle):
               c = normalizar(calle)
@@ -99,31 +115,32 @@ jobs:
               n = int(numero) if numero.isdigit() else 0
               return str((n // 100) * 100) if n else numero
 
-          # ── Inputs ───────────────────────────────────────────────────────
+          # ── Inputs ────────────────────────────────────────────────────────
           provincia    = os.environ['PROVINCIA'].strip()
           barrio       = os.environ['BARRIO'].strip()
           direccion    = os.environ['DIRECCION'].strip()
           puntaje      = int(os.environ['PUNTAJE'])
           titulo       = os.environ['TITULO'].strip()
           texto        = os.environ['TEXTO'].strip()
+          recomendaria = os.environ['RECOMENDARIA'].strip()
+          trato        = os.environ['TRATO'].strip()
 
           calle_raw, altura_exacta = parsear_direccion(direccion)
-          calle_norm   = normalizar_calle(calle_raw)
-          alt_pub      = altura_publica(altura_exacta)
-          calle_disp   = re.sub(r'\b\w', lambda m: m.group().upper(), calle_raw)
-          partes_addr  = [f"{calle_disp} {altura_exacta}".strip(), barrio, provincia]
+          calle_norm  = normalizar_calle(calle_raw)
+          alt_pub     = altura_publica(altura_exacta)
+          calle_disp  = re.sub(r'\b\w', lambda m: m.group().upper(), calle_raw)
+          partes_addr = [f"{calle_disp} {altura_exacta}".strip(), barrio, provincia]
           display_addr = ' — '.join(p for p in partes_addr if p)
           fingerprint  = f"{normalizar(provincia)}:{calle_norm}:{altura_exacta}:edificio::"
 
-          print(f"Fingerprint : {fingerprint}")
-          print(f"Display     : {display_addr}")
+          print(f"Fingerprint  : {fingerprint}")
+          print(f"Display addr : {display_addr}")
 
-          # ── Buscar o crear Property ───────────────────────────────────────
+          # ── Buscar o crear Property ────────────────────────────────────────
           existing = gql('''
               query ListByFP($fp: String!) {
                   listPropertyByPropertyFingerprint(propertyFingerprint: $fp) {
-                      items { id displayAddress totalResenas puntajePromedio
-                              totalRecomiendan totalNoRecomiendan }
+                      items { id displayAddress totalResenas puntajePromedio totalRecomiendan totalNoRecomiendan }
                   }
               }
           ''', {'fp': fingerprint})
@@ -136,80 +153,70 @@ jobs:
           else:
               created = gql('''
                   mutation CreateProp($input: CreatePropertyInput!) {
-                      createProperty(input: $input) {
-                          id displayAddress
-                      }
+                      createProperty(input: $input) { id displayAddress }
                   }
               ''', {'input': {
                   'propertyFingerprint': fingerprint,
-                  'provincia':           provincia,
-                  'barrio':              barrio,
-                  'calleNormalizada':    calle_norm,
-                  'calleDisplay':        calle_disp,
-                  'alturaPublica':       alt_pub,
-                  'alturaExacta':        altura_exacta,
-                  'displayAddress':      display_addr,
-                  'tipoVivienda':        'edificio',
-                  'totalResenas':        0,
-                  'puntajePromedio':     0.0,
-                  'totalRecomiendan':    0,
-                  'totalNoRecomiendan':  0,
+                  'provincia':          provincia,
+                  'barrio':             barrio,
+                  'calleNormalizada':   calle_norm,
+                  'calleDisplay':       calle_disp,
+                  'alturaPublica':      alt_pub,
+                  'alturaExacta':       altura_exacta,
+                  'displayAddress':     display_addr,
+                  'tipoVivienda':       'edificio',
+                  'totalResenas':       0,
+                  'puntajePromedio':    0.0,
+                  'totalRecomiendan':   0,
+                  'totalNoRecomiendan': 0,
               }})
               prop = created['createProperty']
               print(f"Property creada: {prop['id']} — {prop['displayAddress']}")
 
           prop_id = prop['id']
 
-          # ── Crear Review ─────────────────────────────────────────────────
+          # ── Crear Review ──────────────────────────────────────────────────
           rev = gql('''
               mutation CreateRev($input: CreateReviewInput!) {
                   createReview(input: $input) { id }
               }
           ''', {'input': {
               'propertyId':  prop_id,
-              'autorId':     'github-actions-seed',
+              'autorId':     'seed-script',
               'titulo':      titulo,
               'texto':       texto,
               'puntaje':     puntaje,
-              'trato':       'normal',
+              'trato':       trato,
               'problemas':   [],
-              'recomendaria': 'si',
+              'recomendaria': recomendaria,
               'estado':      'activo',
           }})
-          print(f"Review creada: {rev['createReview']['id']}")
+          rev_id = rev['createReview']['id']
+          print(f"Review creada: {rev_id}")
 
-          # ── Actualizar stats ──────────────────────────────────────────────
+          # ── Actualizar stats en Property ──────────────────────────────────
           old_total = prop.get('totalResenas') or 0
           new_total = old_total + 1
           old_prom  = prop.get('puntajePromedio') or 0.0
-          new_prom  = (old_prom * old_total + puntaje) / new_total
-          new_rec   = (prop.get('totalRecomiendan') or 0) + 1
+          new_prom  = round((old_prom * old_total + puntaje) / new_total, 2)
 
-          update_input = {
+          old_rec   = prop.get('totalRecomiendan') or 0
+          old_norec = prop.get('totalNoRecomiendan') or 0
+          new_rec   = old_rec   + (1 if recomendaria == 'si'  else 0)
+          new_norec = old_norec + (1 if recomendaria == 'no'  else 0)
+
+          gql('''
+              mutation UpdateProp($input: UpdatePropertyInput!) {
+                  updateProperty(input: $input) { id }
+              }
+          ''', {'input': {
               'id':               prop_id,
               'totalResenas':     new_total,
-              'puntajePromedio':  round(new_prom, 2),
+              'puntajePromedio':  new_prom,
               'totalRecomiendan': new_rec,
-          }
+              'totalNoRecomiendan': new_norec,
+          }})
 
-          # Campos agregados opcionales (solo si ya están deployados en AppSync)
-          try:
-              tratos = {'normal': 1}
-              update_with_agg = {**update_input, 'tratosAgregados': json.dumps(tratos)}
-              gql('''
-                  mutation UpdateProp($input: UpdatePropertyInput!) {
-                      updateProperty(input: $input) { id }
-                  }
-              ''', {'input': update_with_agg})
-              print("Stats + agregados actualizados")
-          except Exception:
-              # Si los campos agregados no existen todavía en AppSync, actualizar sin ellos
-              gql('''
-                  mutation UpdateProp($input: UpdatePropertyInput!) {
-                      updateProperty(input: $input) { id }
-                  }
-              ''', {'input': update_input})
-              print("Stats actualizados (sin campos agregados — schema pendiente de deploy)")
-          print(f"Stats: {new_total} reseñas, prom {new_prom:.2f}")
+          print(f"Stats actualizados: {new_total} reseña(s), prom {new_prom}, rec {new_rec}, no-rec {new_norec}")
           print("✅ Listo")
-          EOF
+          PYEOF
