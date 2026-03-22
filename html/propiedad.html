@@ -776,6 +776,11 @@
 
                 if (reviewsResult.errors?.length) {
                     console.warn('Review.list errors:', reviewsResult.errors);
+                    const errMsg = reviewsResult.errors[0].message;
+                    const reviewsSection = document.querySelector('.reviews-list') || document.querySelector('.pcard.section-card:last-child');
+                    if (reviewsSection) {
+                        reviewsSection.innerHTML += `<p style="color:#e74c3c; font-size:13px; margin-top:8px;">⚠ Error cargando reseñas: ${errMsg}</p>`;
+                    }
                 }
 
             } catch (err) {
