@@ -105,11 +105,10 @@ jobs:
               Permanent=True,
           )
 
-          # ── Login admin → JWT ─────────────────────────────────────────────
-          auth_resp = cognito.admin_initiate_auth(
-              UserPoolId=USER_POOL_ID,
+          # ── Login → JWT ───────────────────────────────────────────────────
+          auth_resp = cognito.initiate_auth(
               ClientId=CLIENT_ID,
-              AuthFlow='ADMIN_USER_PASSWORD_AUTH',
+              AuthFlow='USER_PASSWORD_AUTH',
               AuthParameters={'USERNAME': SEED_USER, 'PASSWORD': temp_pass},
           )
           id_token = auth_resp['AuthenticationResult']['IdToken']
