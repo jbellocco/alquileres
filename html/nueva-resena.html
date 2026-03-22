@@ -817,19 +817,19 @@
                     recomendaria,
                     estado:          'activo',
                     imagenes:        imagenes.length > 0 ? imagenes : null,
-                    // Inmobiliaria al momento de la reseña
                     porInmobiliaria:    esPorInmob,
                     nombreInmobiliaria: esPorInmob ? nombreInmobiliaria : null,
+                    moneda:          moneda || null,
+                    precioAlquiler:  precioAlquiler ? parseInt(precioAlquiler) : null,
+                    tipoContrato:    tipoContrato || null,
                 });
                 if (!reviewCreada) throw new Error(reviewErrors?.[0]?.message || 'No se pudo crear la reseña');
 
-                // 5. Actualizar stats de Property (solo campos del schema actual)
+                // 5. Actualizar stats de Property
                 const nuevosStats = actualizarStatsConNuevaResena(property, {
                     puntaje: parseInt(puntaje), recomendaria, trato, problemas, moneda, tipoContrato,
                 });
-                // Excluir campos que requieren deploy del nuevo schema
-                const { problemasAgregados, tratosAgregados, monedasAgregadas, contratosAgregados, ...statsActuales } = nuevosStats;
-                await client.models.Property.update({ id: property.id, ...statsActuales });
+                await client.models.Property.update({ id: property.id, ...nuevosStats });
 
                 mostrarExito();
             } catch (err) {

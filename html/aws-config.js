@@ -51,6 +51,10 @@ export const awsConfig = {
             puntajePromedio:     { name: "puntajePromedio",     isArray: false, type: "Float",       isRequired: false, attributes: [] },
             totalRecomiendan:    { name: "totalRecomiendan",    isArray: false, type: "Int",         isRequired: false, attributes: [] },
             totalNoRecomiendan:  { name: "totalNoRecomiendan",  isArray: false, type: "Int",         isRequired: false, attributes: [] },
+            problemasAgregados:  { name: "problemasAgregados",  isArray: false, type: "String",      isRequired: false, attributes: [] },
+            tratosAgregados:     { name: "tratosAgregados",     isArray: false, type: "String",      isRequired: false, attributes: [] },
+            monedasAgregadas:    { name: "monedasAgregadas",    isArray: false, type: "String",      isRequired: false, attributes: [] },
+            contratosAgregados:  { name: "contratosAgregados",  isArray: false, type: "String",      isRequired: false, attributes: [] },
             createdAt: { name: "createdAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true },
             updatedAt: { name: "updatedAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true }
           },
@@ -83,6 +87,9 @@ export const awsConfig = {
             motivoRechazo:   { name: "motivoRechazo",   isArray: false, type: "String",  isRequired: false, attributes: [] },
             porInmobiliaria:    { name: "porInmobiliaria",    isArray: false, type: "Boolean", isRequired: false, attributes: [] },
             nombreInmobiliaria: { name: "nombreInmobiliaria", isArray: false, type: "String",  isRequired: false, attributes: [] },
+            moneda:             { name: "moneda",             isArray: false, type: "String",  isRequired: false, attributes: [] },
+            precioAlquiler:     { name: "precioAlquiler",     isArray: false, type: "Int",     isRequired: false, attributes: [] },
+            tipoContrato:       { name: "tipoContrato",       isArray: false, type: "String",  isRequired: false, attributes: [] },
             createdAt: { name: "createdAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true },
             updatedAt: { name: "updatedAt", isArray: false, type: "AWSDateTime", isRequired: false, attributes: [], isReadOnly: true }
           },
