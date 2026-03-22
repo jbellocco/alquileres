@@ -7,6 +7,9 @@ backend:
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
+    preBuild:
+      commands:
+        - node -e "const o=require('./amplify_outputs.json');require('fs').writeFileSync('./html/aws-config.js','// Auto-generado por amplify.yml — no editar manualmente\nexport const awsConfig = '+JSON.stringify(o)+';');"
     build:
       commands: []
   artifacts:
