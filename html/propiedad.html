@@ -347,33 +347,144 @@
             .info-grid { grid-template-columns: 1fr; }
             .section-card { padding: 18px 16px; }
         }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            background: rgba(229, 129, 18, 0.98);
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            box-shadow: 0 8px 28px rgba(25, 35, 52, .14);
+        }
+        .topbar-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .brand-logo-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 8px 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.15);
+            text-decoration: none;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .brand-name { font-size: 18px; font-weight: 900; color: #1f2d3d; letter-spacing: -.3px; }
+        .brand-badge {
+            font-size: 11px; font-weight: 800;
+            background: #e58112; color: #fff;
+            border-radius: 999px; padding: 3px 8px;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .topbar-back {
+            color: rgba(255,255,255,.92);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 9px 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .18s;
+        }
+        .topbar-back:hover { background: rgba(255,255,255,.12); }
+        .topbar-cta {
+            border: 0; border-radius: 14px; padding: 10px 16px;
+            font-size: 14px; font-weight: 900; cursor: pointer;
+            background: #fff; color: #c86b08;
+            font-family: Inter, sans-serif; white-space: nowrap;
+        }
+        .topbar-cta:hover { background: #fff8ef; }
+        .topbar-auth { display: flex; gap: 8px; }
+        .topbar-auth button {
+            border: 1px solid rgba(255,255,255,.3); border-radius: 12px;
+            padding: 8px 13px; font-size: 13px; font-weight: 700;
+            cursor: pointer; background: rgba(255,255,255,.1); color: #fff;
+            font-family: Inter, sans-serif; display: flex; align-items: center; gap: 6px;
+        }
+        .topbar-auth button:hover { background: rgba(255,255,255,.2); }
+        .profile-pill {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14);
+            padding: 6px 8px 6px 12px; border-radius: 999px;
+            color: #fff; font-weight: 700; font-size: 14px; position: relative;
+        }
+        .avatar-btn {
+            background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.7);
+            border-radius: 50%; width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; overflow: hidden; padding: 0; color: #fff;
+        }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        .user-dropdown {
+            display: none; position: absolute; top: calc(100% + 10px); right: 0;
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 16px 40px rgba(0,0,0,.16);
+            padding: 8px; min-width: 200px; z-index: 100;
+        }
+        .user-dropdown.open { display: flex; flex-direction: column; }
+        .dropdown-nombre {
+            font-weight: 700; font-size: 13px; color: #243447;
+            padding: 8px 12px 10px; border-bottom: 1px solid #edf1f5; margin-bottom: 4px;
+        }
+        .user-dropdown button {
+            background: none; border: none; text-align: left;
+            padding: 10px 12px; border-radius: 10px; cursor: pointer;
+            color: #243447; font-family: Inter, sans-serif;
+            font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; width: 100%;
+        }
+        .user-dropdown button:hover { background: #f6f7f9; }
+        @media (max-width: 600px) {
+            .topbar-back span { display: none; }
+            .topbar-inner { padding: 10px 16px; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <a href="index.html"><img src="assets/logo.png" alt="Opiniones de Alquileres" class="header-logo"></a>
-        <div id="header-auth">
-            <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
-            <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
-        </div>
-        <div id="header-user" style="display:none; position:relative; align-items:center; gap:10px;">
-            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
-                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
-                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
-            </button>
-            <span id="header-nombre" class="header-nombre"></span>
-            <div id="user-dropdown" class="user-dropdown">
-                <span id="dropdown-nombre" class="dropdown-nombre"></span>
-                <hr class="dropdown-divider">
-                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
-                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+    <div class="topbar">
+        <div class="topbar-inner">
+            <a href="index.html" class="brand-logo-link">
+                <span class="brand-name">Alquiler</span>
+                <span class="brand-badge">Beta</span>
+            </a>
+            <div class="topbar-right">
+                <a href="index.html" class="topbar-back">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <button class="topbar-cta" onclick="location.href='nueva-resena.html'">+ Agregar reseña</button>
+                <div id="header-auth" class="topbar-auth">
+                    <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+                    <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+                </div>
+                <div id="header-user" style="display:none; position:relative;" class="profile-pill">
+                    <span id="header-nombre"></span>
+                    <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+                        <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+                        <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div id="dropdown-nombre" class="dropdown-nombre"></div>
+                        <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+                        <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+                    </div>
+                </div>
             </div>
         </div>
-    </header>
+    </div>
 
     <div class="page">
-        <a href="index.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
         <div id="prop-contenido">
             <div class="state-msg">
                 <i class="fa-solid fa-spinner fa-spin"></i>
@@ -382,9 +493,8 @@
         </div>
     </div>
 
-    <footer>
-        <p><i class="fa-regular fa-copyright"></i> 2026 Opiniones de Alquileres</p>
-        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
+    <footer style="text-align:center; padding:24px; color:#6d7c8c; font-size:13px; border-top:1px solid #edf1f5; background:#fff;">
+        <p>© 2026 Opiniones de Alquileres · <a href="mailto:info@alquileres.com" style="color:#e58112; text-decoration:none;">info@alquileres.com</a></p>
     </footer>
 
     <script type="module">
