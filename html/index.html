@@ -38,14 +38,31 @@
       gap: 20px;
     }
     .brand-logo-link {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       background: #fff;
       border-radius: 14px;
-      padding: 6px 10px;
+      padding: 8px 14px;
       box-shadow: 0 2px 10px rgba(0,0,0,.15);
-      line-height: 0;
+      text-decoration: none;
+      line-height: 1;
     }
-    .topbar-logo { height: 38px; width: auto; display: block; }
+    .brand-name {
+      font-size: 18px;
+      font-weight: 900;
+      color: #1f2d3d;
+      letter-spacing: -.3px;
+    }
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 800;
+      background: #e58112;
+      color: #fff;
+      border-radius: 999px;
+      padding: 3px 8px;
+      letter-spacing: .02em;
+    }
 
     .nav {
       display: flex;
@@ -435,14 +452,15 @@
   <div class="topbar">
     <div class="topbar-inner">
       <a href="index.html" class="brand-logo-link">
-        <img src="assets/logo.png" alt="Opiniones de Alquileres" class="topbar-logo">
+        <span class="brand-name">Alquiler</span>
+        <span class="brand-badge">Beta</span>
       </a>
 
       <nav class="nav">
         <a class="nav-link is-active" href="index.html">Inicio</a>
         <a class="nav-link" href="#explorar">Explorar</a>
         <a class="nav-link" href="#como-funciona">Cómo funciona</a>
-        <a class="nav-link" href="mis-resenas.html">Mis reseñas</a>
+        <a class="nav-link" href="mis-resenas.html" id="nav-mis-resenas" style="display:none;">Mis reseñas</a>
       </nav>
 
       <div class="top-actions">
@@ -792,6 +810,7 @@
 
       document.getElementById('header-auth').style.display = 'none';
       document.getElementById('header-user').style.display = 'flex';
+      document.getElementById('nav-mis-resenas').style.display = 'block';
 
       try {
         const { data: perfiles } = await clientAuth.models.UserProfile.list({
