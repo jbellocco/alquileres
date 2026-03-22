@@ -67,9 +67,9 @@ jobs:
           import boto3, requests
 
           # ── Config ────────────────────────────────────────────────────────
-          APPSYNC_URL  = 'https://ldwqyceuljhebag4ifwcixn5gq.appsync-api.us-east-1.amazonaws.com/graphql'
-          USER_POOL_ID = 'us-east-1_fphLKO5wM'
-          CLIENT_ID    = '4g65on17i80qh7b4vbloq1memc'
+          APPSYNC_URL  = 'https://3zg5s5hivfcojnc27e44y37tam.appsync-api.us-east-1.amazonaws.com/graphql'
+          USER_POOL_ID = 'us-east-1_jN5tkGcKU'
+          CLIENT_ID    = '4l5epctq80004rrfbi9g126l6l'
           REGION       = 'us-east-1'
           SEED_USER    = 'seed-bot@alquileres.test'
 
