@@ -747,13 +747,22 @@
                 const user   = await getUsuarioActual();
                 const client = user ? clientAuth : clientIAM;
 
-                const [{ data: prop }, { data: reviews }] = await Promise.all([
+                const [propResult, reviewsResult] = await Promise.all([
                     client.models.Property.get({ id }),
                     client.models.Review.list({ filter: { propertyId: { eq: id } }, limit: 50 }),
                 ]);
 
+                if (propResult.errors?.length) {
+                    console.error('Property.get errors:', propResult.errors);
+                    contenido.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation" style="color:#e74c3c;"></i> Error al cargar la propiedad.<br><small style="font-size:12px; color:#aaa;">${propResult.errors[0].message}</small></div>`;
+                    return;
+                }
+
+                const prop    = propResult.data;
+                const reviews = reviewsResult.data;
+
                 if (!prop) {
-                    contenido.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation" style="color:#e74c3c;"></i> Propiedad no encontrada.</div>`;
+                    contenido.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation" style="color:#e74c3c;"></i> Propiedad no encontrada.<br><small style="font-size:12px; color:#aaa;">ID: ${id}</small></div>`;
                     return;
                 }
 
@@ -764,6 +773,10 @@
 
                 // Cargar imágenes async
                 loadImages(reviews || []);
+
+                if (reviewsResult.errors?.length) {
+                    console.warn('Review.list errors:', reviewsResult.errors);
+                }
 
             } catch (err) {
                 contenido.innerHTML = `
