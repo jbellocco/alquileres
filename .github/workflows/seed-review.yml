@@ -105,6 +105,24 @@ jobs:
               Permanent=True,
           )
 
+          # ── Habilitar USER_PASSWORD_AUTH en el App Client ─────────────────
+          # Leemos la config actual y agregamos el flow sin pisar otros settings
+          client_info = cognito.describe_user_pool_client(
+              UserPoolId=USER_POOL_ID,
+              ClientId=CLIENT_ID,
+          )['UserPoolClient']
+
+          flows = set(client_info.get('ExplicitAuthFlows', []))
+          flows.add('ALLOW_USER_PASSWORD_AUTH')
+          flows.add('ALLOW_REFRESH_TOKEN_AUTH')  # requerido junto al anterior
+
+          cognito.update_user_pool_client(
+              UserPoolId=USER_POOL_ID,
+              ClientId=CLIENT_ID,
+              ExplicitAuthFlows=list(flows),
+          )
+          print("Auth flow habilitado")
+
           # ── Login → JWT ───────────────────────────────────────────────────
           auth_resp = cognito.initiate_auth(
               ClientId=CLIENT_ID,
