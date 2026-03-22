@@ -1,323 +1,867 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <title>Opiniones de Alquileres</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Opiniones de Alquileres</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background: #f6f7f9;
+      color: #243447;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      background: rgba(229, 129, 18, 0.98);
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 8px 28px rgba(25, 35, 52, .14);
+      backdrop-filter: blur(10px);
+    }
+    .topbar-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 20px;
+    }
+    .brand-logo-link {
+      display: block;
+      background: #fff;
+      border-radius: 14px;
+      padding: 6px 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.15);
+      line-height: 0;
+    }
+    .topbar-logo { height: 38px; width: auto; display: block; }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .nav-link {
+      color: rgba(255,255,255,.92);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: background .18s, color .18s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .nav-link.is-active {
+      background: rgba(255,255,255,.16);
+      color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-self: end;
+    }
+    .top-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 14px;
+      padding: 10px 14px;
+      min-width: 260px;
+    }
+    .top-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-family: Inter, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+    }
+    .top-search input::placeholder { color: rgba(255,255,255,.65); }
+    .top-search i { color: rgba(255,255,255,.75); }
+
+    .top-cta {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      background: #fff;
+      color: #c86b08;
+      box-shadow: 0 6px 16px rgba(0,0,0,.12);
+      font-family: Inter, sans-serif;
+      white-space: nowrap;
+    }
+    .top-cta:hover { background: #fff8ef; }
+
+    .topbar-auth { display: flex; gap: 8px; }
+    .topbar-auth button {
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      font-family: Inter, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topbar-auth button:hover { background: rgba(255,255,255,.2); }
+
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 6px 8px 6px 12px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      position: relative;
+    }
+    .avatar-btn {
+      background: rgba(255,255,255,.18);
+      border: 2px solid rgba(255,255,255,.7);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      padding: 0;
+      color: #fff;
+    }
+    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.16);
+      padding: 8px;
+      min-width: 210px;
+      z-index: 100;
+    }
+    .user-dropdown.open { display: flex; flex-direction: column; }
+    .dropdown-nombre {
+      font-weight: 700;
+      font-size: 13px;
+      color: #243447;
+      padding: 8px 12px 10px;
+      border-bottom: 1px solid #edf1f5;
+      margin-bottom: 4px;
+    }
+    .user-dropdown button {
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #243447;
+      font-family: Inter, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .user-dropdown button:hover { background: #f6f7f9; }
+
+    /* ===== PAGE ===== */
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px 50px;
+      flex: 1;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e7ebf0;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(20, 38, 63, .06);
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .hero-main {
+      padding: 34px;
+      background: linear-gradient(135deg, #fff 0%, #fff 62%, #fff8ef 100%);
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: #8a97a6;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .hero-title { font-size: 46px; line-height: 1.06; font-weight: 900; margin: 0 0 14px; color: #1f2d3d; }
+    .hero-sub { font-size: 18px; line-height: 1.65; color: #5f7083; margin-bottom: 24px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+    .btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 15px 20px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+    }
+    .btn-primary { background: #e58112; color: #fff; box-shadow: 0 10px 18px rgba(229,129,18,.22); }
+    .btn-primary:hover { background: #c96d08; }
+    .btn-secondary { background: #fff; color: #243447; border: 1.5px solid #e7ebf0; }
+    .btn-secondary:hover { background: #f6f7f9; }
+
+    .hero-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+    .mini { border: 1px solid #edf1f5; background: rgba(255,255,255,.8); border-radius: 18px; padding: 16px; }
+    .mini strong { display: block; margin-bottom: 6px; font-size: 15px; color: #1f2d3d; }
+    .mini span { color: #6a7a8c; font-size: 13px; line-height: 1.45; }
+
+    .hero-side { padding: 24px; display: grid; gap: 16px; align-content: start; }
+    .side-title { font-size: 12px; font-weight: 800; color: #7a8796; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+    .search-box { border: 1px solid #e7ebf0; border-radius: 18px; padding: 16px; background: #fbfcfe; }
+    .search-input {
+      width: 100%;
+      border: 1.5px solid #e4eaf0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 15px;
+      margin-bottom: 14px;
+      outline: none;
+      font-family: Inter, sans-serif;
+      color: #243447;
+    }
+    .search-input:focus { border-color: #e58112; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      border: 1px solid #e5ebf1;
+      background: #fff;
+      color: #33475b;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+      transition: background .15s;
+    }
+    .chip:hover { background: #f0f4f8; }
+    .chip.active { background: #fff4e8; border-color: #ffd7ad; color: #c96d08; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { border-radius: 16px; background: #f8fafc; border: 1px solid #edf1f5; padding: 16px; }
+    .stat strong { display: block; font-size: 26px; font-weight: 900; margin-bottom: 4px; color: #1f2d3d; }
+    .stat span { color: #6f8091; font-size: 12px; }
+
+    /* ===== SECTIONS ===== */
+    .section { margin-top: 28px; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+    .section-head h2 { margin: 0; font-size: 34px; font-weight: 900; color: #1f2d3d; }
+    .section-head p { margin: 8px 0 0; color: #67788a; font-size: 16px; }
+    .sort-select {
+      border: 1.5px solid #e4eaf0;
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px 16px;
+      color: #33475b;
+      font-weight: 700;
+      font-family: Inter, sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .why-card { padding: 24px; }
+    .why-card h3 { margin: 0 0 10px; font-size: 20px; font-weight: 800; color: #1f2d3d; }
+    .why-card p { margin: 0; color: #627284; line-height: 1.65; font-size: 15px; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .step { padding: 24px; position: relative; overflow: hidden; }
+    .step-number { font-size: 54px; font-weight: 900; color: #eef2f6; position: absolute; top: 8px; right: 18px; line-height: 1; }
+    .step h3 { margin: 0 0 8px; font-size: 20px; font-weight: 800; position: relative; z-index: 1; color: #1f2d3d; }
+    .step p { margin: 0; color: #627284; line-height: 1.65; font-size: 15px; position: relative; z-index: 1; }
+
+    /* ===== PROPERTY CARDS ===== */
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .property-card { overflow: hidden; transition: transform .18s, box-shadow .18s; cursor: pointer; }
+    .property-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(20,38,63,.1); }
+    .property-image {
+      height: 200px;
+      background: linear-gradient(135deg, #dfe6ee, #f2f5f8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .property-image img { width: 100%; height: 100%; object-fit: cover; }
+    .property-content { padding: 20px; }
+    .prop-location { color: #667789; font-size: 13px; margin-bottom: 6px; font-weight: 600; }
+    .prop-address { font-size: 22px; font-weight: 900; line-height: 1.15; margin-bottom: 8px; color: #203041; }
+    .prop-meta { color: #6f8091; font-size: 13px; margin-bottom: 12px; }
+    .rating-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .rating-score { font-size: 20px; font-weight: 900; color: #1f2d3d; }
+    .stars { color: #f59e0b; font-weight: 800; font-size: 15px; }
+    .rating-label { color: #6f8091; font-size: 13px; }
+    .prop-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 26px; }
+    .prop-tag {
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #f5f8fb;
+      border: 1px solid #e7edf3;
+      color: #33475b;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .prop-tag.warn { background: #fff2f2; border-color: #ffd7d7; color: #c44848; }
+    .prop-tag.good { background: #eefaf1; border-color: #cfead6; color: #2f7d46; }
+    .property-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid #edf1f5;
+      font-size: 13px;
+      color: #6f8091;
+      font-weight: 600;
+    }
+    .ver-mas { color: #e58112; font-weight: 700; }
+
+    /* ===== CTA BAND ===== */
+    .cta-band {
+      margin-top: 32px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      background: linear-gradient(135deg, #203041 0%, #31465c 100%);
+      color: #fff;
+      border-radius: 24px;
+      box-shadow: 0 14px 34px rgba(20,38,63,.18);
+    }
+    .cta-band h3 { margin: 0 0 8px; font-size: 28px; font-weight: 900; }
+    .cta-band p { margin: 0; font-size: 16px; line-height: 1.65; color: rgba(255,255,255,.82); }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #6d7c8c;
+      font-size: 13px;
+      border-top: 1px solid #edf1f5;
+      background: #fff;
+    }
+
+    .loading-state {
+      text-align: center;
+      color: #6c757d;
+      grid-column: 1 / -1;
+      padding: 60px 0;
+      font-size: 16px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1020px) {
+      .hero, .cards-grid, .why-grid, .steps { grid-template-columns: 1fr; }
+      .hero-points { grid-template-columns: 1fr; }
+      .cta-band { grid-template-columns: 1fr; }
+      .topbar-inner { grid-template-columns: auto auto; }
+      .nav { display: none; }
+    }
+    @media (max-width: 700px) {
+      .topbar-inner, .page { padding-left: 16px; padding-right: 16px; }
+      .hero-main { padding: 24px; }
+      .hero-title { font-size: 32px; }
+      .section-head { flex-direction: column; align-items: start; }
+      .top-search { display: none; }
+      .section-head h2 { font-size: 26px; }
+      .cta-band { padding: 24px; }
+      .cta-band h3 { font-size: 22px; }
+    }
+  </style>
 </head>
 <body>
 
-    <header>
-        <a href="index.html"><img src="assets/logo.png" alt="Opiniones de Alquileres" class="header-logo"></a>
-        <!-- Botones para usuarios no logueados -->
-        <div id="header-auth">
-            <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
-            <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+  <!-- ===== TOPBAR ===== -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a href="index.html" class="brand-logo-link">
+        <img src="assets/logo.png" alt="Opiniones de Alquileres" class="topbar-logo">
+      </a>
+
+      <nav class="nav">
+        <a class="nav-link is-active" href="index.html">Inicio</a>
+        <a class="nav-link" href="#explorar">Explorar</a>
+        <a class="nav-link" href="#como-funciona">Cómo funciona</a>
+        <a class="nav-link" href="mis-resenas.html">Mis reseñas</a>
+      </nav>
+
+      <div class="top-actions">
+        <div class="top-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="buscador" placeholder="Buscar por dirección, barrio o inmobiliaria">
         </div>
-        <!-- Avatar para usuarios logueados -->
-        <div id="header-user" style="display:none; position:relative; align-items:center; gap:10px;">
-            <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
-                <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
-                <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
-            </button>
-            <span id="header-nombre" class="header-nombre"></span>
-            <div id="user-dropdown" class="user-dropdown">
-                <span id="dropdown-nombre" class="dropdown-nombre"></span>
-                <hr class="dropdown-divider">
-                <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
-                <button onclick="document.getElementById('foto-perfil-input').click()"><i class="fa-solid fa-camera"></i> Cambiar foto</button>
-                <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
-            </div>
+        <button class="top-cta" onclick="location.href='nueva-resena.html'">+ Agregar reseña</button>
+
+        <div id="header-auth" class="topbar-auth">
+          <button onclick="location.href='login.html'"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+          <button onclick="location.href='registro.html'"><i class="fa-solid fa-user-plus"></i> Registrarse</button>
+        </div>
+
+        <div id="header-user" style="display:none; position:relative;" class="profile-pill">
+          <span id="header-nombre"></span>
+          <button id="avatar-btn" class="avatar-btn" onclick="toggleDropdown()">
+            <img id="avatar-img" class="avatar-img" style="display:none;" alt="Foto de perfil">
+            <span id="avatar-icon"><i class="fa-solid fa-user"></i></span>
+          </button>
+          <div id="user-dropdown" class="user-dropdown">
+            <div id="dropdown-nombre" class="dropdown-nombre"></div>
+            <button onclick="location.href='mis-resenas.html'"><i class="fa-solid fa-list"></i> Mis reseñas</button>
+            <button onclick="document.getElementById('foto-perfil-input').click()"><i class="fa-solid fa-camera"></i> Cambiar foto</button>
+            <button onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+          </div>
         </div>
         <input type="file" id="foto-perfil-input" accept="image/*" style="display:none;">
-    </header>
+      </div>
+    </div>
+  </div>
 
-    <main>
-        <section>
-            <h2>Buscar Reseña</h2>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="buscador" placeholder="Buscar por barrio, zona...">
+  <div class="page">
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+      <div class="card hero-main">
+        <div class="eyebrow">✦ Transparencia para alquilar mejor</div>
+        <h1 class="hero-title">Antes de alquilar, mirá la experiencia real de otros inquilinos.</h1>
+        <div class="hero-sub">
+          Leé reseñas sobre propiedades, inmobiliarias y barrios para descubrir problemas frecuentes, trato real y señales que casi nunca aparecen en un aviso.
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('explorar').scrollIntoView({behavior:'smooth'})">Explorar reseñas</button>
+          <button class="btn btn-secondary" onclick="location.href='nueva-resena.html'">Agregar una reseña</button>
+        </div>
+        <div class="hero-points">
+          <div class="mini">
+            <strong>Conocé el trato real</strong>
+            <span>Descubrí cómo respondieron dueños e inmobiliarias con depósitos, arreglos y aumentos.</span>
+          </div>
+          <div class="mini">
+            <strong>Detectá problemas ocultos</strong>
+            <span>Ruidos, humedad, expensas, plagas, instalaciones viejas y estado real del inmueble.</span>
+          </div>
+          <div class="mini">
+            <strong>Tomá mejores decisiones</strong>
+            <span>Leé señales claras antes de firmar y evitá entrar a ciegas a una propiedad.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hero-side">
+        <div>
+          <div class="side-title">Buscá una propiedad o una zona</div>
+          <div class="search-box">
+            <input class="search-input" id="buscador-side" placeholder="Buscar por dirección, barrio, zona o inmobiliaria">
+            <div class="filters">
+              <button class="chip active filtro-zona" data-zona="">Todas</button>
+              <button class="chip filtro-zona" data-zona="CABA">CABA</button>
+              <button class="chip filtro-zona" data-zona="Buenos Aires">Buenos Aires</button>
+              <button class="chip filtro-zona" data-zona="Córdoba">Córdoba</button>
+              <button class="chip filtro-zona" data-zona="Santa Fe">Santa Fe</button>
             </div>
-            <div>
-                <button onclick="location.href='nueva-resena.html'"><i class="fa-solid fa-plus"></i> Agregar Reseña</button>
-                <button><i class="fa-solid fa-compass"></i> Explorar Reseñas</button>
+          </div>
+        </div>
+        <div>
+          <div class="side-title">La comunidad ya está aportando</div>
+          <div class="stats-grid">
+            <div class="stat"><strong id="stat-resenas">–</strong><span>Reseñas publicadas</span></div>
+            <div class="stat"><strong id="stat-props">–</strong><span>Propiedades reseñadas</span></div>
+            <div class="stat"><strong id="stat-rec">–</strong><span>Recomiendan volver</span></div>
+            <div class="stat"><strong id="stat-puntaje">–</strong><span>Puntaje promedio</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== POR QUÉ ===== -->
+    <div class="section">
+      <div class="section-head">
+        <div>
+          <h2>¿Por qué usar esta plataforma?</h2>
+          <p>La información más importante sobre un alquiler casi nunca aparece en la publicación.</p>
+        </div>
+      </div>
+      <div class="why-grid">
+        <div class="card why-card">
+          <h3>Trato real</h3>
+          <p>Conocé cómo fue la experiencia con dueños e inmobiliarias: depósito, arreglos, aumentos, comunicación y cumplimiento.</p>
+        </div>
+        <div class="card why-card">
+          <h3>Problemas ocultos</h3>
+          <p>Descubrí lo que más se repite: ruidos, humedad, plagas, mala instalación eléctrica, expensas inesperadas o vecinos conflictivos.</p>
+        </div>
+        <div class="card why-card">
+          <h3>Decisión más segura</h3>
+          <p>Leé experiencias reales, detectá señales frecuentes y decidí con mejor información antes de comprometerte con un alquiler.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CÓMO FUNCIONA ===== -->
+    <div class="section" id="como-funciona">
+      <div class="section-head">
+        <div>
+          <h2>¿Cómo funciona?</h2>
+          <p>Un flujo simple para encontrar más contexto antes de alquilar y también aportar tu experiencia.</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="card step">
+          <div class="step-number">1</div>
+          <h3>Buscá una propiedad o zona</h3>
+          <p>Explorá por dirección, barrio, partido, provincia o inmobiliaria para encontrar propiedades reseñadas.</p>
+        </div>
+        <div class="card step">
+          <div class="step-number">2</div>
+          <h3>Leé reseñas y señales</h3>
+          <p>Mirá puntajes, problemas frecuentes, trato reportado y resumen agregado de cada propiedad.</p>
+        </div>
+        <div class="card step">
+          <div class="step-number">3</div>
+          <h3>Sumá tu experiencia</h3>
+          <p>Publicá una reseña para ayudar a otros inquilinos y hacer más transparente el mercado.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PROPIEDADES ===== -->
+    <div class="section" id="explorar">
+      <div class="section-head">
+        <div>
+          <h2>Propiedades con reseñas</h2>
+          <p>Descubrí propiedades reseñadas por otros inquilinos.</p>
+        </div>
+        <select id="orden" class="sort-select">
+          <option value="recientes">Más recientes</option>
+          <option value="mejor">Mejor valoradas</option>
+          <option value="peor">Peor valoradas</option>
+        </select>
+      </div>
+      <div class="cards-grid" id="resenas-grid">
+        <p class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Cargando propiedades...</p>
+      </div>
+    </div>
+
+    <!-- ===== CTA BAND ===== -->
+    <div class="cta-band">
+      <div>
+        <h3>¿Viviste en una propiedad? Ayudá a otros a alquilar mejor.</h3>
+        <p>Compartí tu experiencia sobre el trato, el inmueble, el barrio y la operación. Una sola reseña puede evitarle un mal alquiler a otra persona.</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="location.href='nueva-resena.html'">Agregar una reseña</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>© 2026 Opiniones de Alquileres · <a href="mailto:info@alquileres.com" style="color:#e58112; text-decoration:none;">info@alquileres.com</a></p>
+  </footer>
+
+  <script type="module">
+    import { Amplify } from 'https://esm.sh/aws-amplify@6';
+    import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
+    import { getUrl, uploadData } from 'https://esm.sh/aws-amplify@6/storage';
+    import { awsConfig } from './aws-config.js';
+    import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+
+    Amplify.configure(awsConfig);
+    const clientIAM = generateClient({ authMode: 'iam' });
+    const clientAuth = generateClient();
+
+    let todasLasProperties = [];
+    let clientData = clientIAM;
+    let perfilActual = null;
+
+    function capitalizar(str) {
+      if (!str) return '';
+      return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+
+    function estrellas(puntaje) {
+      const p = Math.round(puntaje || 0);
+      let s = '';
+      for (let i = 1; i <= 5; i++) s += i <= p ? '★' : '☆';
+      return s;
+    }
+
+    function ordenarLista(lista) {
+      const orden = document.getElementById('orden').value;
+      const copia = [...lista];
+      if (orden === 'mejor') copia.sort((a, b) => (b.puntajePromedio || 0) - (a.puntajePromedio || 0));
+      else if (orden === 'peor') copia.sort((a, b) => (a.puntajePromedio || 0) - (b.puntajePromedio || 0));
+      else copia.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return copia;
+    }
+
+    function renderProperties(lista) {
+      const grid = document.getElementById('resenas-grid');
+      if (lista.length === 0) {
+        grid.innerHTML = '<p class="loading-state"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron propiedades</p>';
+        return;
+      }
+      const ordenada = ordenarLista(lista);
+      grid.innerHTML = ordenada.map((p, i) => {
+        const ubicacion = [p.barrio, p.partido, p.provincia].filter(Boolean).join(' · ');
+        const dirPublica = p.displayAddress || [
+          p.calleNormalizada ? p.calleNormalizada.replace(/\b\w/g, c => c.toUpperCase()) : '',
+          p.alturaPublica
+        ].filter(Boolean).join(' ');
+        const prom = p.puntajePromedio ? p.puntajePromedio.toFixed(1) : '–';
+        const total = p.totalResenas || 0;
+        const rec = p.totalRecomiendan || 0;
+        const noRec = p.totalNoRecomiendan || 0;
+        const tipoLabel = p.porInmobiliaria && p.nombreInmobiliaria ? p.nombreInmobiliaria : 'Dueño directo';
+        const recLabel = (rec + noRec) > 0
+          ? `${Math.round(rec / (rec + noRec) * 100)}% lo recomendaría`
+          : `${total} reseña${total !== 1 ? 's' : ''}`;
+        const fechaLabel = p.createdAt
+          ? new Date(p.createdAt).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+          : '';
+
+        return `
+          <div class="card property-card" onclick="location.href='propiedad.html?id=${p.id}'">
+            <div class="property-image" id="img-wrap-${i}">
+              <i class="fa-solid fa-building" style="font-size:2.5rem; color:#b0beca;"></i>
             </div>
-            <div>
-                <button class="filtro-zona" data-zona=""><i class="fa-solid fa-location-dot"></i> Todas</button>
-                <button class="filtro-zona" data-zona="CABA"><i class="fa-solid fa-location-dot"></i> CABA</button>
-                <button class="filtro-zona" data-zona="Buenos Aires"><i class="fa-solid fa-location-dot"></i> Buenos Aires</button>
-                <button class="filtro-zona" data-zona="Córdoba"><i class="fa-solid fa-location-dot"></i> Córdoba</button>
-                <button class="filtro-zona" data-zona="Santa Fe"><i class="fa-solid fa-location-dot"></i> Santa Fe</button>
+            <div class="property-content">
+              <div class="prop-location">${ubicacion}</div>
+              <div class="prop-address">${dirPublica || ubicacion}</div>
+              <div class="prop-meta">${tipoLabel} · ${total} reseña${total !== 1 ? 's' : ''}</div>
+              <div class="rating-row">
+                <div class="rating-score">${prom}</div>
+                <div class="stars">${estrellas(p.puntajePromedio)}</div>
+                <div class="rating-label">${recLabel}</div>
+              </div>
+              <div class="prop-tags">
+                ${rec > 0 ? `<span class="prop-tag good"><i class="fa-solid fa-thumbs-up"></i> ${rec} recom.</span>` : ''}
+                ${noRec > 0 ? `<span class="prop-tag warn"><i class="fa-solid fa-thumbs-down"></i> ${noRec} no recom.</span>` : ''}
+              </div>
+              <div class="property-footer">
+                <span>${fechaLabel ? `<i class="fa-regular fa-calendar"></i> ${fechaLabel}` : ''}</span>
+                <span class="ver-mas">Ver detalle →</span>
+              </div>
             </div>
-            <div style="justify-content:flex-end;">
-                <select id="orden" style="border:1.5px solid #e9ecef; border-radius:8px; padding:8px 12px; font-family:'Inter',sans-serif; font-size:0.875rem; color:#2c3e50; background:#fff; cursor:pointer;">
-                    <option value="recientes">Más recientes</option>
-                    <option value="mejor">Mejor valoradas</option>
-                    <option value="peor">Peor valoradas</option>
-                </select>
-            </div>
-        </section>
+          </div>`;
+      }).join('');
 
-        <section id="resenas-grid">
-            <p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;">
-                <i class="fa-solid fa-spinner fa-spin"></i> Cargando reseñas...
-            </p>
-        </section>
-    </main>
+      ordenada.forEach(async (p, i) => {
+        try {
+          const { data: reviews } = await clientData.models.Review.list({
+            filter: { propertyId: { eq: p.id } }, limit: 1
+          });
+          const rev = reviews && reviews[0];
+          if (rev && rev.imagenes && rev.imagenes[0]) {
+            const { url } = await getUrl({ path: rev.imagenes[0] });
+            const wrap = document.getElementById(`img-wrap-${i}`);
+            if (wrap) wrap.innerHTML = `<img src="${url}" alt="foto propiedad">`;
+          }
+        } catch (e) {}
+      });
+    }
 
-    <footer>
-        <p><i class="fa-regular fa-copyright"></i> 2026 Reseñas de Alquileres</p>
-        <p><i class="fa-solid fa-envelope"></i> Contacto: info@alquileres.com</p>
-    </footer>
+    function actualizarStats(lista) {
+      const totalResenas = lista.reduce((s, p) => s + (p.totalResenas || 0), 0);
+      const totalRec = lista.reduce((s, p) => s + (p.totalRecomiendan || 0), 0);
+      const totalNoRec = lista.reduce((s, p) => s + (p.totalNoRecomiendan || 0), 0);
+      const puntajes = lista.filter(p => p.puntajePromedio).map(p => p.puntajePromedio);
+      const puntajeProm = puntajes.length
+        ? (puntajes.reduce((s, v) => s + v, 0) / puntajes.length).toFixed(1)
+        : '–';
+      const recPct = (totalRec + totalNoRec) > 0
+        ? Math.round(totalRec / (totalRec + totalNoRec) * 100) + '%'
+        : '–';
+      document.getElementById('stat-resenas').textContent = totalResenas || '–';
+      document.getElementById('stat-props').textContent = lista.length || '–';
+      document.getElementById('stat-rec').textContent = recPct;
+      document.getElementById('stat-puntaje').textContent = puntajeProm;
+    }
 
-    <script type="module">
-        import { Amplify } from 'https://esm.sh/aws-amplify@6';
-        import { generateClient } from 'https://esm.sh/aws-amplify@6/data';
-        import { getUrl, uploadData } from 'https://esm.sh/aws-amplify@6/storage';
-        import { awsConfig } from './aws-config.js';
-        import { getUsuarioActual, logout, getAtributosUsuario } from './auth.js';
+    async function cargarProperties() {
+      try {
+        const { data } = await clientData.models.Property.list({ limit: 50 });
+        todasLasProperties = data;
+        renderProperties(data);
+        actualizarStats(data);
+      } catch (err) {
+        console.error('Error cargarProperties:', err);
+        document.getElementById('resenas-grid').innerHTML =
+          `<p class="loading-state" style="color:#e74c3c;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar propiedades<br>
+            <small style="font-size:0.8rem; color:#aaa; display:block; margin-top:6px;">${err.message || err}</small>
+          </p>`;
+      }
+    }
 
-        Amplify.configure(awsConfig);
-        const clientIAM = generateClient({ authMode: 'iam' });
-        const clientAuth = generateClient(); // usa Cognito para datos privados
+    function filtrarPorTexto(q) {
+      const lower = q.toLowerCase();
+      const filtradas = todasLasProperties.filter(p =>
+        (p.barrio || '').toLowerCase().includes(lower) ||
+        (p.provincia || '').toLowerCase().includes(lower) ||
+        (p.partido || '').toLowerCase().includes(lower) ||
+        (p.displayAddress || '').toLowerCase().includes(lower)
+      );
+      renderProperties(filtradas);
+    }
 
-        let todasLasProperties = [];
-        let clientData = clientIAM; // se actualiza a clientAuth si hay sesión
-        let perfilActual = null;
+    document.getElementById('buscador').addEventListener('input', e => {
+      document.getElementById('buscador-side').value = e.target.value;
+      filtrarPorTexto(e.target.value);
+    });
+    document.getElementById('buscador-side').addEventListener('input', e => {
+      document.getElementById('buscador').value = e.target.value;
+      filtrarPorTexto(e.target.value);
+    });
 
-        function capitalizar(str) {
-            if (!str) return '';
-            return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        }
+    document.querySelectorAll('.filtro-zona').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filtro-zona').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const zona = btn.dataset.zona;
+        const filtradas = zona ? todasLasProperties.filter(p => p.provincia === zona) : todasLasProperties;
+        renderProperties(filtradas);
+      });
+    });
 
-        function estrellas(puntaje) {
-            const p = Math.round(puntaje || 0);
-            let html = '';
-            for (let i = 1; i <= 5; i++) {
-                html += i <= p
-                    ? '<i class="fa-solid fa-star"></i>'
-                    : '<i class="fa-regular fa-star"></i>';
-            }
-            return html;
-        }
+    document.getElementById('orden').addEventListener('change', () => renderProperties(todasLasProperties));
 
-        function ordenarLista(lista) {
-            const orden = document.getElementById('orden').value;
-            const copia = [...lista];
-            if (orden === 'mejor') copia.sort((a, b) => (b.puntajePromedio || 0) - (a.puntajePromedio || 0));
-            else if (orden === 'peor') copia.sort((a, b) => (a.puntajePromedio || 0) - (b.puntajePromedio || 0));
-            else copia.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            return copia;
-        }
+    async function inicializarHeader() {
+      const user = await getUsuarioActual();
+      if (user) clientData = clientAuth;
+      cargarProperties();
+      if (!user) return;
 
-        function renderProperties(lista) {
-            const grid = document.getElementById('resenas-grid');
-            if (lista.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; color:#6c757d; grid-column:1/-1; padding:40px 0;"><i class="fa-solid fa-magnifying-glass"></i> No se encontraron propiedades</p>';
-                return;
-            }
-            const ordenada = ordenarLista(lista);
-            grid.innerHTML = ordenada.map((p, i) => {
-                const ubicacion = [p.barrio, p.partido, p.provincia].filter(Boolean).join(' — ');
-                const dirPublica = p.displayAddress || [
-                    p.calleNormalizada ? p.calleNormalizada.replace(/\b\w/g, c => c.toUpperCase()) : '',
-                    p.alturaPublica
-                ].filter(Boolean).join(' ');
-                const prom  = p.puntajePromedio ? p.puntajePromedio.toFixed(1) : '–';
-                const total = p.totalResenas || 0;
-                const rec   = p.totalRecomiendan || 0;
-                const noRec = p.totalNoRecomiendan || 0;
-                const inmob = p.porInmobiliaria && p.nombreInmobiliaria
-                    ? `<span style="font-size:0.78rem; background:#fff3e0; color:#c46a09; padding:2px 8px; border-radius:999px; font-weight:500;">${p.nombreInmobiliaria}</span>`
-                    : '';
-                const recBadge = rec > 0 || noRec > 0
-                    ? `<p style="display:flex; gap:8px; flex-wrap:wrap;">
-                        ${rec > 0 ? `<span style="display:inline-flex; align-items:center; gap:4px; background:#e8f5e9; color:#2e7d32; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-thumbs-up"></i> ${rec}</span>` : ''}
-                        ${noRec > 0 ? `<span style="display:inline-flex; align-items:center; gap:4px; background:#fdecea; color:#c0392b; padding:2px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-thumbs-down"></i> ${noRec}</span>` : ''}
-                      </p>`
-                    : '';
-                return `
-                <article style="cursor:pointer;" onclick="location.href='propiedad.html?id=${p.id}'">
-                    <div id="img-wrap-${i}" style="background:#f8f9fa; height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                        <i class="fa-solid fa-building" style="font-size:2rem; color:#ced4da;"></i>
-                    </div>
-                    <div class="card-body">
-                        <h3><i class="fa-solid fa-map-pin"></i> ${ubicacion}</h3>
-                        ${dirPublica ? `<p style="display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-road" style="color:#e07b10; font-size:0.75rem;"></i> ${dirPublica} ${inmob}</p>` : (inmob ? `<p>${inmob}</p>` : '')}
-                        <p class="card-stars">${estrellas(p.puntajePromedio)} ${prom}/5</p>
-                        <p style="font-size:0.82rem; color:#6c757d;"><i class="fa-solid fa-comment" style="color:#e07b10; font-size:0.75rem;"></i> ${total} reseña${total !== 1 ? 's' : ''}</p>
-                        ${recBadge}
-                    </div>
-                </article>`;
-            }).join('');
+      document.getElementById('header-auth').style.display = 'none';
+      document.getElementById('header-user').style.display = 'flex';
 
-            // Cargar imagen de la primera reseña de cada propiedad de forma asíncrona
-            ordenada.forEach(async (p, i) => {
-                try {
-                    const { data: reviews } = await clientData.models.Review.list({
-                        filter: { propertyId: { eq: p.id } },
-                        limit: 1
-                    });
-                    const rev = reviews && reviews[0];
-                    if (rev && rev.imagenes && rev.imagenes[0]) {
-                        const { url } = await getUrl({ path: rev.imagenes[0] });
-                        const wrap = document.getElementById(`img-wrap-${i}`);
-                        if (wrap) wrap.innerHTML = `<img src="${url}" alt="foto" style="width:100%;height:100%;object-fit:cover;">`;
-                    }
-                } catch (e) {}
-            });
-        }
-
-        async function cargarProperties() {
-            try {
-                const { data } = await clientData.models.Property.list({ limit: 50 });
-                todasLasProperties = data;
-                renderProperties(data);
-            } catch (err) {
-                console.error('Error cargarProperties:', err);
-                document.getElementById('resenas-grid').innerHTML =
-                    `<p style="text-align:center; color:#e74c3c; grid-column:1/-1; padding:40px 0;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Error al cargar propiedades<br>
-                        <small style="font-size:0.8rem; color:#aaa;">${err.message || err}</small>
-                    </p>`;
-            }
-        }
-
-        // Filtro por zona (provincia)
-        document.querySelectorAll('.filtro-zona').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const zona = btn.dataset.zona;
-                const filtradas = zona
-                    ? todasLasProperties.filter(p => p.provincia === zona)
-                    : todasLasProperties;
-                renderProperties(filtradas);
-            });
+      try {
+        const { data: perfiles } = await clientAuth.models.UserProfile.list({
+          filter: { userId: { eq: user.userId } }
         });
-
-        // Buscador
-        document.getElementById('buscador').addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase();
-            const filtradas = todasLasProperties.filter(p =>
-                (p.barrio || '').toLowerCase().includes(q) ||
-                (p.provincia || '').toLowerCase().includes(q) ||
-                (p.partido || '').toLowerCase().includes(q) ||
-                (p.displayAddress || '').toLowerCase().includes(q)
-            );
-            renderProperties(filtradas);
-        });
-
-        // Orden
-        document.getElementById('orden').addEventListener('change', () => {
-            renderProperties(todasLasProperties);
-        });
-
-        // ===== HEADER AUTH =====
-        async function inicializarHeader() {
-            const user = await getUsuarioActual();
-            if (user) {
-                clientData = clientAuth;
-            }
-            cargarProperties();
-
-            if (!user) return;
-
-            document.getElementById('header-auth').style.display = 'none';
-            document.getElementById('header-user').style.display = 'flex';
-
-            try {
-                const { data: perfiles } = await clientAuth.models.UserProfile.list({
-                    filter: { userId: { eq: user.userId } }
-                });
-                let perfil = perfiles && perfiles[0];
-
-                // Si no tiene UserProfile, lo creamos con los datos de Cognito
-                if (!perfil) {
-                    const attrs = await getAtributosUsuario();
-                    const { data: nuevo } = await clientAuth.models.UserProfile.create({
-                        userId: user.userId,
-                        nombre: attrs.nombre,
-                        apellido: attrs.apellido,
-                    });
-                    perfil = nuevo;
-                }
-
-                if (perfil) {
-                    perfilActual = perfil;
-                    const nombre = capitalizar(perfil.nombre);
-                    const apellido = capitalizar(perfil.apellido);
-                    document.getElementById('header-nombre').textContent = nombre;
-                    document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
-
-                    if (perfil.fotoPerfil) {
-                        mostrarAvatarFoto(perfil.fotoPerfil);
-                    }
-                }
-            } catch (e) {
-                // Muestra ícono genérico si falla la carga del perfil
-            }
+        let perfil = perfiles && perfiles[0];
+        if (!perfil) {
+          const attrs = await getAtributosUsuario();
+          const { data: nuevo } = await clientAuth.models.UserProfile.create({
+            userId: user.userId,
+            nombre: attrs.nombre,
+            apellido: attrs.apellido,
+          });
+          perfil = nuevo;
         }
-
-        function toggleDropdown() {
-            const d = document.getElementById('user-dropdown');
-            d.classList.toggle('open');
+        if (perfil) {
+          perfilActual = perfil;
+          const nombre = capitalizar(perfil.nombre);
+          const apellido = capitalizar(perfil.apellido);
+          document.getElementById('header-nombre').textContent = nombre;
+          document.getElementById('dropdown-nombre').textContent = `${nombre} ${apellido}`;
+          if (perfil.fotoPerfil) mostrarAvatarFoto(perfil.fotoPerfil);
         }
+      } catch (e) {}
+    }
 
-        document.addEventListener('click', (e) => {
-            if (!document.getElementById('header-user').contains(e.target)) {
-                document.getElementById('user-dropdown').classList.remove('open');
-            }
-        });
+    function toggleDropdown() {
+      document.getElementById('user-dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', e => {
+      const hu = document.getElementById('header-user');
+      if (hu && !hu.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open');
+    });
 
-        window.toggleDropdown = toggleDropdown;
+    window.toggleDropdown = toggleDropdown;
+    async function cerrarSesion() { await logout(); }
+    window.cerrarSesion = cerrarSesion;
 
-        async function cerrarSesion() {
-            await logout();
-        }
-        window.cerrarSesion = cerrarSesion;
+    async function mostrarAvatarFoto(path) {
+      try {
+        const { url } = await getUrl({ path });
+        const img = document.getElementById('avatar-img');
+        img.src = url.toString();
+        img.style.display = 'block';
+        document.getElementById('avatar-icon').style.display = 'none';
+      } catch (e) {}
+    }
 
-        async function mostrarAvatarFoto(path) {
-            try {
-                const { url } = await getUrl({ path });
-                const img = document.getElementById('avatar-img');
-                const icon = document.getElementById('avatar-icon');
-                img.src = url.toString();
-                img.style.display = 'block';
-                icon.style.display = 'none';
-            } catch (e) {}
-        }
+    async function subirFotoPerfil(file) {
+      if (!file || !perfilActual) return;
+      const ext = file.name.split('.').pop();
+      try {
+        const result = await uploadData({
+          path: ({ identityId }) => `perfiles/${identityId}/foto.${ext}`,
+          data: file,
+          options: { contentType: file.type }
+        }).result;
+        await clientAuth.models.UserProfile.update({ id: perfilActual.id, fotoPerfil: result.path });
+        perfilActual.fotoPerfil = result.path;
+        await mostrarAvatarFoto(result.path);
+      } catch (e) { console.error('Error al subir foto:', e); }
+    }
 
-        async function subirFotoPerfil(file) {
-            if (!file || !perfilActual) return;
-            const ext = file.name.split('.').pop();
-            try {
-                const result = await uploadData({
-                    path: ({ identityId }) => `perfiles/${identityId}/foto.${ext}`,
-                    data: file,
-                    options: { contentType: file.type }
-                }).result;
-                await clientAuth.models.UserProfile.update({
-                    id: perfilActual.id,
-                    fotoPerfil: result.path
-                });
-                perfilActual.fotoPerfil = result.path;
-                await mostrarAvatarFoto(result.path);
-            } catch (e) {
-                console.error('Error al subir foto:', e);
-            }
-        }
+    document.getElementById('foto-perfil-input').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) subirFotoPerfil(file);
+    });
 
-        document.getElementById('foto-perfil-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) subirFotoPerfil(file);
-        });
-
-        inicializarHeader();
-    </script>
+    inicializarHeader();
+  </script>
 
 </body>
 </html>
