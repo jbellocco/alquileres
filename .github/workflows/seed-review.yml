@@ -25,7 +25,7 @@ on:
         required: true
       texto:
         description: 'Texto de la reseña'
-        default: 'El departamento estaba en buen estado. La inmobiliaria respondió bien ante los problemas menores. Recomendaría la propiedad.'
+        default: 'El departamento estaba en buen estado. La inmobiliaria respondió bien. Recomendaría la propiedad.'
         required: true
       recomendaria:
         description: 'Recomendaría (si / no / tal-vez)'
@@ -41,6 +41,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       - name: Install dependencies
         run: pip install requests boto3
 
@@ -54,30 +61,59 @@ jobs:
           TEXTO:        ${{ github.event.inputs.texto }}
           RECOMENDARIA: ${{ github.event.inputs.recomendaria }}
           TRATO:        ${{ github.event.inputs.trato }}
-          SEED_USERNAME: ${{ secrets.SEED_USERNAME }}
-          SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
         run: |
           python3 << 'PYEOF'
-          import json, os, re, boto3, requests
+          import json, os, re, secrets, string
+          import boto3, requests
 
           # ── Config ────────────────────────────────────────────────────────
           APPSYNC_URL  = 'https://ldwqyceuljhebag4ifwcixn5gq.appsync-api.us-east-1.amazonaws.com/graphql'
           USER_POOL_ID = 'us-east-1_fphLKO5wM'
           CLIENT_ID    = '4g65on17i80qh7b4vbloq1memc'
           REGION       = 'us-east-1'
-
-          # ── Login con Cognito → obtener JWT ───────────────────────────────
-          username = os.environ['SEED_USERNAME']
-          password = os.environ['SEED_PASSWORD']
+          SEED_USER    = 'seed-bot'
 
           cognito = boto3.client('cognito-idp', region_name=REGION)
-          auth_resp = cognito.initiate_auth(
-              AuthFlow='USER_PASSWORD_AUTH',
-              AuthParameters={'USERNAME': username, 'PASSWORD': password},
+
+          # ── Crear usuario de prueba si no existe ──────────────────────────
+          # Genera contraseña aleatoria fuerte cada vez; la usa una sola vez.
+          alphabet = string.ascii_letters + string.digits + '!@#$'
+          temp_pass = (
+              secrets.choice(string.ascii_uppercase) +
+              secrets.choice(string.ascii_lowercase) +
+              secrets.choice(string.digits) +
+              secrets.choice('!@#$') +
+              ''.join(secrets.choice(alphabet) for _ in range(12))
+          )
+
+          try:
+              cognito.admin_create_user(
+                  UserPoolId=USER_POOL_ID,
+                  Username=SEED_USER,
+                  MessageAction='SUPPRESS',   # no manda email de verificación
+                  TemporaryPassword=temp_pass,
+              )
+              print("Usuario seed-bot creado")
+          except cognito.exceptions.UsernameExistsException:
+              print("Usuario seed-bot ya existe — actualizando contraseña")
+
+          # Fija la contraseña como permanente (evita el forzado de cambio)
+          cognito.admin_set_user_password(
+              UserPoolId=USER_POOL_ID,
+              Username=SEED_USER,
+              Password=temp_pass,
+              Permanent=True,
+          )
+
+          # ── Login admin → JWT ─────────────────────────────────────────────
+          auth_resp = cognito.admin_initiate_auth(
+              UserPoolId=USER_POOL_ID,
               ClientId=CLIENT_ID,
+              AuthFlow='ADMIN_USER_PASSWORD_AUTH',
+              AuthParameters={'USERNAME': SEED_USER, 'PASSWORD': temp_pass},
           )
           id_token = auth_resp['AuthenticationResult']['IdToken']
-          print(f"Login OK — usuario: {username}")
+          print("Login OK")
 
           # ── GraphQL helper ────────────────────────────────────────────────
           def gql(query, variables=None):
@@ -181,42 +217,38 @@ jobs:
                   createReview(input: $input) { id }
               }
           ''', {'input': {
-              'propertyId':  prop_id,
-              'autorId':     'seed-script',
-              'titulo':      titulo,
-              'texto':       texto,
-              'puntaje':     puntaje,
-              'trato':       trato,
-              'problemas':   [],
+              'propertyId':   prop_id,
+              'autorId':      'seed-bot',
+              'titulo':       titulo,
+              'texto':        texto,
+              'puntaje':      puntaje,
+              'trato':        trato,
+              'problemas':    [],
               'recomendaria': recomendaria,
-              'estado':      'activo',
+              'estado':       'activo',
           }})
-          rev_id = rev['createReview']['id']
-          print(f"Review creada: {rev_id}")
+          print(f"Review creada: {rev['createReview']['id']}")
 
-          # ── Actualizar stats en Property ──────────────────────────────────
+          # ── Actualizar stats ───────────────────────────────────────────────
           old_total = prop.get('totalResenas') or 0
           new_total = old_total + 1
           old_prom  = prop.get('puntajePromedio') or 0.0
           new_prom  = round((old_prom * old_total + puntaje) / new_total, 2)
-
-          old_rec   = prop.get('totalRecomiendan') or 0
-          old_norec = prop.get('totalNoRecomiendan') or 0
-          new_rec   = old_rec   + (1 if recomendaria == 'si'  else 0)
-          new_norec = old_norec + (1 if recomendaria == 'no'  else 0)
+          new_rec   = (prop.get('totalRecomiendan')   or 0) + (1 if recomendaria == 'si' else 0)
+          new_norec = (prop.get('totalNoRecomiendan') or 0) + (1 if recomendaria == 'no' else 0)
 
           gql('''
               mutation UpdateProp($input: UpdatePropertyInput!) {
                   updateProperty(input: $input) { id }
               }
           ''', {'input': {
-              'id':               prop_id,
-              'totalResenas':     new_total,
-              'puntajePromedio':  new_prom,
-              'totalRecomiendan': new_rec,
+              'id':                prop_id,
+              'totalResenas':      new_total,
+              'puntajePromedio':   new_prom,
+              'totalRecomiendan':  new_rec,
               'totalNoRecomiendan': new_norec,
           }})
 
-          print(f"Stats actualizados: {new_total} reseña(s), prom {new_prom}, rec {new_rec}, no-rec {new_norec}")
+          print(f"Stats: {new_total} reseña(s), prom {new_prom}, rec {new_rec}, no-rec {new_norec}")
           print("✅ Listo")
           PYEOF
