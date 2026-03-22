@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
+// schema v2 — incluye campos agregados en Property y campos económicos en Review
 const schema = a.schema({
 
   // ===== PROPIEDAD (entidad del inmueble, existe una sola vez) =====

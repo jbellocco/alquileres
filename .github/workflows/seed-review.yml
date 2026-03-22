@@ -123,9 +123,7 @@ jobs:
               query ListByFP($fp: String!) {
                   listPropertyByPropertyFingerprint(propertyFingerprint: $fp) {
                       items { id displayAddress totalResenas puntajePromedio
-                              totalRecomiendan totalNoRecomiendan
-                              problemasAgregados tratosAgregados
-                              monedasAgregadas contratosAgregados }
+                              totalRecomiendan totalNoRecomiendan }
                   }
               }
           ''', {'fp': fingerprint})
@@ -187,21 +185,31 @@ jobs:
           new_prom  = (old_prom * old_total + puntaje) / new_total
           new_rec   = (prop.get('totalRecomiendan') or 0) + 1
 
-          tratos_raw = prop.get('tratosAgregados') or '{}'
-          tratos = json.loads(tratos_raw)
-          tratos['normal'] = tratos.get('normal', 0) + 1
+          update_input = {
+              'id':               prop_id,
+              'totalResenas':     new_total,
+              'puntajePromedio':  round(new_prom, 2),
+              'totalRecomiendan': new_rec,
+          }
 
-          gql('''
-              mutation UpdateProp($input: UpdatePropertyInput!) {
-                  updateProperty(input: $input) { id }
-              }
-          ''', {'input': {
-              'id':                prop_id,
-              'totalResenas':      new_total,
-              'puntajePromedio':   round(new_prom, 2),
-              'totalRecomiendan':  new_rec,
-              'tratosAgregados':   json.dumps(tratos),
-          }})
+          # Campos agregados opcionales (solo si ya están deployados en AppSync)
+          try:
+              tratos = {'normal': 1}
+              update_with_agg = {**update_input, 'tratosAgregados': json.dumps(tratos)}
+              gql('''
+                  mutation UpdateProp($input: UpdatePropertyInput!) {
+                      updateProperty(input: $input) { id }
+                  }
+              ''', {'input': update_with_agg})
+              print("Stats + agregados actualizados")
+          except Exception:
+              # Si los campos agregados no existen todavía en AppSync, actualizar sin ellos
+              gql('''
+                  mutation UpdateProp($input: UpdatePropertyInput!) {
+                      updateProperty(input: $input) { id }
+                  }
+              ''', {'input': update_input})
+              print("Stats actualizados (sin campos agregados — schema pendiente de deploy)")
           print(f"Stats: {new_total} reseñas, prom {new_prom:.2f}")
           print("✅ Listo")
           EOF
