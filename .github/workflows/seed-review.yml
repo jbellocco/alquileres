@@ -71,7 +71,7 @@ jobs:
           USER_POOL_ID = 'us-east-1_fphLKO5wM'
           CLIENT_ID    = '4g65on17i80qh7b4vbloq1memc'
           REGION       = 'us-east-1'
-          SEED_USER    = 'seed-bot'
+          SEED_USER    = 'seed-bot@alquileres.test'
 
           cognito = boto3.client('cognito-idp', region_name=REGION)
 
